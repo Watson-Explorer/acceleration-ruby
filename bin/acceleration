@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+
+begin
+  require 'acceleration'
+rescue
+  require 'rubygems'
+  require 'acceleration'
+end
+
+require 'irb'
+require 'irb/completion'
+if File.exists? '.irbrc'
+  ENV['IRBRC'] = ".irbrc"
+end
+
+ARGV.clear
+
+IRB.start
+exit!
