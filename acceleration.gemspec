@@ -10,10 +10,11 @@ Gem::Specification.new do |s|
   s.email = ["cdean@vivisimo.com"]
   s.homepage = "http://www.vivisimo.com"
   s.summary = %q{A succinct interface to the Vivísimo Velocity API}
-  s.description = %q{Acceleration provides a succinct, ActiveResource-style interface to a Vivísimo Velocity search platform instance's REST API.}
+  s.description = %q{Acceleration provides a succinct, ActiveResource-style interface to a Vivísimo Velocity search platform instance's REST API. Acceleration is Velocity...integrated.}
 
-  s.add_runtime_dependency "nokogiri"
-  s.add_runtime_dependency "restclient"
+  s.add_dependency "nokogiri"
+  s.add_dependency "restclient"
+  s.add_development_dependency "semver"
 
   s.files = `git ls-files`.split("\n")
   s.test_files = `git ls-files -- {test,spec,features}/*`.split("\n")
