@@ -104,7 +104,46 @@ module Velocity
         "query"
       end
 
+      def search args
+        QueryResponse.new(@instance.call(resolve('search'), args))
+      end
+
     end
+
+    class QueryResponse
+      attr_accessor :doc
+
+      def initialize xml
+        @doc = Nokogiri::XML xml
+      end
+
+      def results?
+        documents.size > 0
+      end
+
+      def documents
+        doc.xpath("/query-results/list/document").collect do |d|
+          Document.new d
+        end
+      end
+    end
+
+    class Document
+      attr_accessor :doc
+
+      def initialize node
+        @doc = node
+      end
+
+      def contents
+        doc.xpath "content"
+      end
+
+      def content name
+        doc.xpath "content[@name='#{name}']"
+      end
+    end
+
     
     def query
       Query.new(self)
