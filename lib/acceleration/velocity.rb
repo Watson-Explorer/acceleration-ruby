@@ -21,13 +21,15 @@
 #
 module Velocity
   class Instance
-    attr_accessor :v_app, :endpoint, :username, :password
+    attr_accessor :v_app, :endpoint, :username, :password, :read_timeout, :open_timeout
 
     def initialize(args)
       @v_app = args[:v_app] || 'api-rest'
       @endpoint = args[:endpoint]
       @username = args[:username]
       @password = args[:password]
+      @read_timeout = args[:read_timeout] || 120
+      @open_timeout = args[:open_timeout] || 30
     end
 
     def call(function, args={})
@@ -39,8 +41,17 @@ module Velocity
         args = args.first
       end
       params = base_parameters.merge( {'v.function' => function}.merge(args))
+      rest_call params
+    end
+
+    def rest_call params
+      #RestClient.get(endpoint, :params => params) #this doesn't allow for
+      #timeouts
+      req = {:method => :get, :url => endpoint, :headers => {:params => params } } #restclient stupidly puts query params in the...headers?
+      req[:timeout] = read_timeout if read_timeout
+      req[:open_timeout] = open_timeout if open_timeout
       puts "hitting #{endpoint} with params: #{params}"
-      RestClient.get(endpoint, :params => params)
+      RestClient::Request.execute(req) 
     end
 
     def base_parameters
@@ -141,6 +152,16 @@ module Velocity
 
       def content name
         doc.xpath "content[@name='#{name}']"
+      end
+
+      def attribute name
+        doc.attribute name
+      end
+      def attributes
+        doc.attributes
+      end
+      def xpath xpath
+        doc.xpath xpath
       end
     end
 
