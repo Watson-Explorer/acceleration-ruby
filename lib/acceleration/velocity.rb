@@ -46,6 +46,7 @@
 module Velocity
   class Instance
     attr_accessor :v_app, :endpoint, :username, :password, :read_timeout, :open_timeout
+    attr_reader :error
 
     def initialize(args)
       @v_app = args[:v_app] || 'api-rest'
@@ -60,30 +61,37 @@ module Velocity
     # Prepare and eventually execute a Velocity API function call.
     #
     # This function is generally meant to be called from within
-    # APIModel#method_missing.
+    # APIModel#method_missing, but a method can call it directly if something
+    # special must be done with the returned Nokogiri::XML object. The classes
+    # that do that generally wrap around the object to provide convenience
+    # methods.
     #
     def call(function, args={})
       sanity_check
-      puts "calling #{function} with args: #{args}"
+      #puts "calling #{function} with args: #{args}"
       if args.class == Array and args.empty?
         args = {}
       elsif !args.empty? and args.first.class == Hash
         args = args.first
       end
       params = base_parameters.merge( {'v.function' => function}.merge(args))
-      rest_call params
+      result = Nokogiri::XML(rest_call params)
+      unless VelocityException.exception? result
+        @error = nil
+        return result
+      else
+        raise VelocityException, result
+      end
     end
 
     ##
     # Perform the actual REST action
     #
     def rest_call params
-      #RestClient.get(endpoint, :params => params) #this doesn't allow for
-      #timeouts
       req = {:method => :get, :url => endpoint, :headers => {:params => params } } #restclient stupidly puts query params in the...headers?
       req[:timeout] = read_timeout if read_timeout
       req[:open_timeout] = open_timeout if open_timeout
-      puts "hitting #{endpoint} with params: #{params}"
+      #puts "hitting #{endpoint} with params: #{params}"
       RestClient::Request.execute(req) 
     end
 
@@ -100,10 +108,16 @@ module Velocity
     # Perform a simple ping against the instance using the API function
     # appropriately named "ping".
     #
+    # If Instance#ping returns false, check Instance#error for the exception
+    # that was thrown. Instance#ping should always have a boolean return. 
+    #
     def ping
-      result = call "ping"
-      n = Nokogiri::XML(result)
-      return true if n.root.name == 'pong'
+      begin
+        n = call "ping"
+        return true if n.root.name == 'pong'
+      rescue Exception => e
+        @error = e
+      end
       return false
     end
 
@@ -111,9 +125,7 @@ module Velocity
     # List all collections available on the instance.
     #
     def collections
-      result = call "search-collection-list-xml"
-      n = Nokogiri::XML(result)
-      raise Velocity::UnexpectedElementError, "Encountered #{n.root.name} when vse-collections was expected." if n.root.name != 'vse-collections' #TODO: make this error handling better
+      n = call "search-collection-list-xml"
       n.xpath('/vse-collections/vse-collection').collect do |c|
         SearchCollection.new_from_xml(:xml => c, :instance => self) #initialize a new one, set its instance to me
       end
@@ -200,8 +212,8 @@ module Velocity
     class QueryResponse
       attr_accessor :doc
 
-      def initialize xml
-        @doc = Nokogiri::XML xml
+      def initialize node
+        @doc = node
       end
 
       ##
@@ -341,6 +353,21 @@ module Velocity
     end
   end
 
-  class UnexpectedElementError < Exception
+  #Generic API exception
+  class VelocityException < Exception
+    #Exception helper function
+    def self.exception? node
+      node.root.name == 'exception'
+    end
+    def initialize node
+      @node = node
+      super(api_message)
+    end
+    def api_message
+      @node.xpath('/exception//text()').to_a.join.strip
+    end
+    def to_s
+      api_message
+    end
   end
 end
