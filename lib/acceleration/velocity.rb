@@ -113,7 +113,7 @@ module Velocity
     def collections
       result = call "search-collection-list-xml"
       n = Nokogiri::XML(result)
-      raise Error if n.root.name != 'vse-collections' #TODO: make this error handling better
+      raise Velocity::UnexpectedElementError, "Encountered #{n.root.name} when vse-collections was expected." if n.root.name != 'vse-collections' #TODO: make this error handling better
       n.xpath('/vse-collections/vse-collection').collect do |c|
         SearchCollection.new_from_xml(:xml => c, :instance => self) #initialize a new one, set its instance to me
       end
@@ -339,5 +339,8 @@ module Velocity
         end
       end
     end
+  end
+
+  class UnexpectedElementError < Exception
   end
 end
