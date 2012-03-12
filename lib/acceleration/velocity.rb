@@ -68,7 +68,7 @@ module Velocity
     #
     def call(function, args={})
       sanity_check
-      #puts "calling #{function} with args: #{args}"
+      puts "calling #{function} with args: #{args}"
       if args.class == Array and args.empty?
         args = {}
       elsif !args.empty? and args.first.class == Hash
@@ -91,7 +91,7 @@ module Velocity
       req = {:method => :get, :url => endpoint, :headers => {:params => params } } #restclient stupidly puts query params in the...headers?
       req[:timeout] = read_timeout if read_timeout
       req[:open_timeout] = open_timeout if open_timeout
-      #puts "hitting #{endpoint} with params: #{params}"
+      puts "hitting #{endpoint} with params: #{params}"
       RestClient::Request.execute(req) 
     end
 
@@ -182,10 +182,6 @@ module Velocity
       def method_missing(function, *args, &block)
         @instance.call resolve(function), args
       end
-    end
-
-    class XMLResponse < Hash
-
     end
 
     ##
@@ -318,10 +314,22 @@ module Velocity
       end
 
       ##
+      # Get a handle on the crawler service
+      def crawler
+        Crawler.new self
+      end
+
+      ##
+      # Get a handle on the indexer service
+      def indexer
+        Indexer.new self
+      end
+
+      ##
       # Retrieve the status of the collection
       #
       def status
-        Status.from_xml instance.call resolve("status"), {:collection => name}
+        Status.new instance.call resolve("status"), {:collection => name}
       end
 
       def self.new_from_xml(args)
@@ -330,26 +338,69 @@ module Velocity
         return sc
       end
 
-      class Status < XMLResponse
+      class Status
         #this is mostly just an easy interface to the status xml hash
-        attr_writer :hash
+        attr_accessor :doc
 
-        def initialize
-          hash = {}
-        end
-
-        def from_xml xml
-          super.from_xml(xml)["vse_status"]
+        def initialize doc
+          @doc = doc
         end
 
         def crawler
-          self["crawler_status"]
+          doc.xpath "/vse-status/crawler-status"
         end
 
         def indexer
-          self["vse_index_status"]
+          doc.xpath "/vse-status/vse-index-status"
+        end
+
+        def has_data?
+          #if we get back just a container node, then the collection isn't
+          #running and has no data.
+          doc.xpath("__CONTAINER__").empty?
         end
       end
+
+      class CollectionService < APIModel
+        attr_accessor :collection
+        def initialize collection
+          @collection = collection
+        end
+        def start options={}
+          act 'start', options
+        end
+        def stop options={}
+          act 'stop', options
+        end
+        def restart options={}
+          act 'restart', options
+        end
+
+        private
+          def act action, options={}
+            collection.instance.call resolve(action), options.merge({:collection => collection.name})
+          end
+      end
+
+      class Crawler < CollectionService
+        #implied by method_missing:
+        #start, stop, restart
+        def prefix
+          collection.prefix + "-crawler"
+        end
+      end
+
+      class Indexer < CollectionService
+        #implied by method_missing:
+        #start, stop, restart, full-merge
+        def prefix
+          collection.prefix + "-indexer"
+        end
+        def full_merge options={}
+          act 'full-merge', options
+        end
+      end
+
     end
   end
 
