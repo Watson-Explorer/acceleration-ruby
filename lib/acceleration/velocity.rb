@@ -346,10 +346,16 @@ module Velocity
           @doc = doc
         end
 
+        ##
+        # Get the crawler status node
+        #
         def crawler
           doc.xpath "/vse-status/crawler-status"
         end
 
+        ##
+        # get the indexer status node
+        #
         def indexer
           doc.xpath "/vse-status/vse-index-status"
         end
@@ -361,6 +367,9 @@ module Velocity
         end
       end
 
+      ##
+      # A model for the collections' services
+      #
       class CollectionService < APIModel
         attr_accessor :collection
         def initialize collection
@@ -382,6 +391,9 @@ module Velocity
           end
       end
 
+      ##
+      # The Crawler service of the collection
+      #
       class Crawler < CollectionService
         #implied by method_missing:
         #start, stop, restart
@@ -390,6 +402,9 @@ module Velocity
         end
       end
 
+      ##
+      # The Indexer service of the collection
+      #
       class Indexer < CollectionService
         #implied by method_missing:
         #start, stop, restart, full-merge
