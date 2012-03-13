@@ -132,6 +132,15 @@ module Velocity
     end
 
     ##
+    # Get just one collection
+    #
+    def collection name
+      c = SearchCollection.new(name)
+      c.instance = self
+      return c
+    end
+
+    ##
     # Ensure that all instance variables necessary to communicate with the API
     # are set.
     #
@@ -298,10 +307,6 @@ module Velocity
     # of convenience methods for accessing its status, controlling its
     # activity, and even enqueuing documents and URLs.
     #
-    #---
-    # TODO: convert this to the new style 
-    #+++
-    #
     class SearchCollection < APIModel
       attr_accessor :name, :instance
 
@@ -312,15 +317,26 @@ module Velocity
       def initialize(collection_name)
         @name = collection_name
       end
+      
+      ##
+      # Factory method used by Instance#collections
+      #
+      def self.new_from_xml(args)
+        sc = SearchCollection.new(args[:xml].attributes['name'].to_s)
+        sc.instance = args[:instance]
+        return sc
+      end
 
       ##
       # Get a handle on the crawler service
+      #
       def crawler
         Crawler.new self
       end
 
       ##
       # Get a handle on the indexer service
+      #
       def indexer
         Indexer.new self
       end
@@ -332,14 +348,9 @@ module Velocity
         Status.new instance.call resolve("status"), {:collection => name}
       end
 
-      def self.new_from_xml(args)
-        sc = SearchCollection.new(args[:xml].attributes['name'].to_s)
-        sc.instance = args[:instance]
-        return sc
-      end
 
       class Status
-        #this is mostly just an easy interface to the status xml hash
+        #this is mostly just an easy interface to the status xml
         attr_accessor :doc
 
         def initialize doc
@@ -375,12 +386,42 @@ module Velocity
         def initialize collection
           @collection = collection
         end
+
+        ##
+        # Start the service.
+        #
+        # Valid option for either service is:
+        #
+        # * :subcollection => 'live' (default) or 'staging'
+        #
+        # Valid option only for crawler service:
+        #
+        # * :type => 'resume' 'resume-and-idle' 'refresh-inplace' 'refresh-new'
+        #             'new' 'apply-changes'
+        #
         def start options={}
           act 'start', options
         end
+
+        ##
+        # Stop the service
+        #
+        # Valid options for either service are:
+        #
+        # * :subcollection => 'live' (default) or 'staging'
+        # * :kill => true or false
+        #
         def stop options={}
           act 'stop', options
         end
+
+        ##
+        # Restart the service
+        #
+        # Valid options for either service are:
+        #
+        # * :subcollection => 'live' (default) or 'staging'
+        #
         def restart options={}
           act 'restart', options
         end
@@ -411,6 +452,12 @@ module Velocity
         def prefix
           collection.prefix + "-indexer"
         end
+
+        ##
+        # Executes a full merge on the index. This reduces the number of files
+        # across which the index is spread and also removes deleted data.
+        #
+        # * :subcollection => 'live' (default) or 'staging'
         def full_merge options={}
           act 'full-merge', options
         end
