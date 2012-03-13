@@ -142,6 +142,16 @@ module Velocity
     end
 
     ##
+    # List all dictionaries available on the instance.
+    #
+    def dictionaries
+      n = call "dictionary-list-xml"
+      n.xpath('/dictionaries/dictionary').collect do |d|
+        Dictionary.new_from_xml(:xml => d, :instance => self)
+      end
+    end
+
+    ##
     # Ensure that all instance variables necessary to communicate with the API
     # are set.
     #
@@ -623,6 +633,77 @@ module Velocity
           act 'full-merge', options
         end
       end
+
+    end
+
+    ## 
+    # Interact with a dictionary on the Velocity instance
+    #
+    # Note that +dictionary-list-xml+ is implemented as
+    # Velocity::Instance#dictionaries.
+    #
+    class Dictionary < APIModel
+      attr_accessor :name, :instance
+      def prefix
+        'dictionary'
+      end
+      private :prefix
+      ##
+      # Factory method used by Instance#collections
+      #
+      def self.new_from_xml(args)
+        d = Dictionary.new(args[:xml].attributes['name'].to_s)
+        d.instance = args[:instance]
+        return d
+      end
+
+      def initialize name
+        @name = name
+      end
+
+      ##
+      # Get the dictionary's status object
+      #
+      # TODO: wrap the XML returned
+      def status
+        act 'status-xml'
+      end
+
+      ##
+      # Begin a build of the dictionary
+      #
+      def build
+        act __method__
+      end
+      ##
+      # Create the dictionary
+      #
+      # Can optionally pass +:based_on+ String to use another dictionary as a template
+      #
+      def create args={}
+        act __method__
+      end
+      ##
+      # Stop the dictionary build process
+      #
+      # Can optionally pass +:kill+ boolean if it should be killed immediately
+      #
+      def stop args={}
+        act __method__, {}
+      end
+      ##
+      # Delete the dictionary
+      #
+      def delete
+        act __method__
+      end
+      
+      def act action, args={}
+        return instance.call resolve(action), args.merge({:dictionary => name})
+      end
+      private :act
+
+
 
     end
   end
