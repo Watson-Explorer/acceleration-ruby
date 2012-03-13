@@ -34,7 +34,8 @@
 #     end
 #    end
 #    c = i.collection("wiki") # => <#Velocity::API::Collection name=wiki>
-#    c.status # => an array of status items
+#
+#    c.status.crawler.n_docs if c.status.has_data? # => get the number of docs
 #
 # == Reference material:
 # * http://rdoc.info/github/archiloque/rest-client/master/file/README.rdoc
@@ -155,6 +156,10 @@ module Velocity
     # The APIModel is a very simple interface for building more complex API
     # function models.
     #
+    # TODO: refactor some of this method into something includable
+    # TODO: move #dasherize to a monkeypatch of string and symbol
+    # TODO: implement #dedasherize
+    #
     class APIModel
 
       def initialize(instance)
@@ -184,6 +189,7 @@ module Velocity
       def prefix
         nil
       end
+      private :prefix
 
       ##
       # This magical method enables a direct pass-through of methods if no
@@ -198,13 +204,44 @@ module Velocity
     # number of arguments that can be passed to Query#search and similar
     # methods. See the API documentation for a complete list.
     #
+    # Acquire a Query by executing Velocity::Instance#query; do not instantiate
+    # one yourself.
+    #
     class Query < APIModel
       def prefix
         "query"
       end
-
+      
+      ##
+      # Execute a standard search using a source the instance.
+      #
+      # You'll want to supply at least a +:sources+ option and likely
+      # a +:query+ option.
       def search args
         QueryResponse.new(@instance.call(resolve('search'), args))
+      end
+
+      ##
+      # Execute a browse query, having already executed a regular Query#search 
+      # and passing the +:browse+ option set to true. 
+      #
+      # You must supply a +:file+ corresponding to the file that was returned
+      # from the original query. This is not checked here, so _caveat_
+      # _implementor_.
+      #
+      def browse args
+        QueryResponse.new(@instance.call(resolve('browse'), args))
+      end
+
+      ##
+      # Execute a similar documents query.
+      #
+      # You must supply a +:document+ containing something that will resolve to
+      # an XML nodeset containing document nodes. This is not checked here, so
+      # _caveat_ _implementor_.
+      #
+      def similar_documents args
+        QueryResponse.new(@instance.call(resolve('similar-documents'), args))
       end
 
     end
@@ -235,6 +272,15 @@ module Velocity
         doc.xpath("/query-results/list/document").collect do |d|
           Document.new d
         end
+      end
+
+      ##
+      # Retrieve the file name of the browse file, a.k.a. +v:file+.
+      #
+      # Pass this as the +:file+ option to Query#browse in order for that
+      # method to work properly.
+      def file
+        doc.xpath('/query-results/@file').first.value
       end
     end
     
@@ -350,7 +396,7 @@ module Velocity
 
 
       class Status
-        #this is mostly just an easy interface to the status xml
+        # The raw document describing the status
         attr_accessor :doc
 
         def initialize doc
@@ -365,19 +411,23 @@ module Velocity
         end
 
         ##
-        # get the indexer status node
+        # Get the indexer status node
         #
         def indexer
           IndexerStatus.new doc.xpath("/vse-status/vse-index-status").first
         end
 
+        ##
+        # Check to see if the collection actually has a status.
+        #
+        # If false, then the collection isn't running and has no data.
+        # if true, then the collection _may_ be running but certainly has data.
         def has_data?
-          #if we get back just a container node, then the collection isn't
-          #running and has no data.
           doc.xpath("__CONTAINER__").empty?
         end
 
         class ServiceStatus
+          # The raw document describing the status
           attr_accessor :doc
 
           def initialize doc
@@ -419,6 +469,9 @@ module Velocity
           # end
         end
 
+        ##
+        # Wrapper for the crawler status object
+        #
         class CrawlerStatus < ServiceStatus
           ##
           # Get the total number of time spent converting
@@ -473,8 +526,11 @@ module Velocity
 
         end
 
+        ##
+        # Wrapper for the index status object
+        #
         class IndexerStatus < ServiceStatus
-
+          #TODO: implement convenience methods
         end
 
 
@@ -529,6 +585,9 @@ module Velocity
         end
 
         private
+          ## 
+          # Refactored interface for all collection services
+          # 
           def act action, options={}
             collection.instance.call resolve(action), options.merge({:collection => collection.name})
           end
@@ -568,19 +627,36 @@ module Velocity
     end
   end
 
-  #Generic API exception
+  ##
+  # Generic Velocity API exception thrown when Velocity doesn't like the
+  # arguments supplied in a call or the credentials are incorrect.
+  # 
+  # Don't ever raise this yourself; it should be raised only by
+  # Velocity::Instance#call
+  #
   class VelocityException < Exception
-    #Exception helper function
+    ##
+    # Determines if a response from the API is an exception response
+    #
     def self.exception? node
       node.root.name == 'exception'
     end
+    ##
+    # Wrap this exception around the XML returned by Velocity
+    #
     def initialize node
       @node = node
       super(api_message)
     end
+    ##
+    # Get the string describing the thrown exception
+    #
     def api_message
       @node.xpath('/exception//text()').to_a.join.strip
     end
+    ##
+    # Convert this exception to a string
+    #
     def to_s
       api_message
     end
