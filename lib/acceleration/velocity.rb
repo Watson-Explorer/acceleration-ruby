@@ -361,14 +361,14 @@ module Velocity
         # Get the crawler status node
         #
         def crawler
-          doc.xpath "/vse-status/crawler-status"
+          CrawlerStatus.new doc.xpath("/vse-status/crawler-status").first
         end
 
         ##
         # get the indexer status node
         #
         def indexer
-          doc.xpath "/vse-status/vse-index-status"
+          IndexerStatus.new doc.xpath("/vse-status/vse-index-status").first
         end
 
         def has_data?
@@ -376,6 +376,108 @@ module Velocity
           #running and has no data.
           doc.xpath("__CONTAINER__").empty?
         end
+
+        class ServiceStatus
+          attr_accessor :doc
+
+          def initialize doc
+            @doc = doc
+          end
+
+          ##
+          # Return a hash of all attributes
+          #
+          # This method resolves the value of all of the Nokogiri attributes so
+          # that you don't have to.
+          #
+          def attributes
+            attrs = {}
+            doc.attributes.each do |key,nattr|
+              attrs[key] = nattr.value
+            end
+            return attrs
+          end
+
+          ##
+          # Get a single attribute
+          #
+          def attribute attr
+            doc.attribute(attr).value
+          end
+
+          ##
+          # Capture attributes accessed as instance variables
+          #
+          # def method_missing (function, *args, &block)
+          #   if doc.attributes.member? function.to_s
+          #     attribute function.to_s
+          #   else if doc.attributes.member? "n-" + function.to_s
+          #     attribute function.to_s
+          #   else
+          #     super(function, args, block)
+          #   end
+          # end
+        end
+
+        class CrawlerStatus < ServiceStatus
+          ##
+          # Get the total number of time spent converting
+          #
+          def converter_timings_total_ms
+            doc.xpath('converter-timings/@total-ms').first.value.to_i
+          end
+          
+          ##
+          # Get an array of hashes containing the timings for all converters
+          # that have run so far while crawling.
+          #
+          def converter_timings
+            doc.xpath('converter-timings/converter-timing').collect do |ct|
+              attrs = {}
+              ct.attributes.each do |key,nattr|
+                attrs[key] = nattr.value
+              end
+              attrs
+            end
+          end
+
+          ##
+          # Retrieve the number of documents output at each hop
+          #
+          def crawl_hops_output
+            crawl_hops :output
+          end
+
+          ##
+          # Retrieve the number of documents input at each hop
+          #
+          def crawl_hops_input
+            crawl_hops :input
+          end
+
+          ##
+          # Private method unifying how crawl-hop elements are presented
+          #
+          def crawl_hops which
+            doc.xpath('crawl-hops-' + which.to_s + '/crawl-hop').collect do |ch|
+              attrs = {}
+              ch.attributes.each do |key, nattr|
+                attrs[key] = nattr.value
+              end
+              attrs
+            end
+          end
+          private :crawl_hops
+
+          #TODO: crawl-remote-all-status/crawl-remote-{server,client,all}-status
+
+        end
+
+        class IndexerStatus < ServiceStatus
+
+        end
+
+
       end
 
       ##
