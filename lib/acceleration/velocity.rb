@@ -44,6 +44,7 @@
 # * http://nokogiri.org/Nokogiri.html
 # * http://zimonet.vivisimo.com/vivisimo/cgi-bin/query-meta?v%3asources=office&query=api%20documentation%20DOCUMENT_KEY%3a%22file%3a%2f%2f%3a80%2foffice%2fDocumentation%2f8.0-0%2fvelocity_api_developers_guide.pdf%2f%22&v%3aframe=cache&search-vfile=viv_mkzSm7&search-state=%28root%29%7croot&
 #
+require 'acceleration/monkeypatches'
 module Velocity
   class Instance
     attr_accessor :v_app, :endpoint, :username, :password, :read_timeout, :open_timeout
@@ -167,8 +168,10 @@ module Velocity
     #
     # Optionally supply a +:pool+ option.
     #
+    # TODO: implement response wrapper
+    #
     def axl_service_status args={}
-      call dasherize(__method__), args
+      call __method__.dasherize, args
     end
 
     ##
@@ -177,8 +180,10 @@ module Velocity
     # Expects a +:environment_list+ option containing a list of environments
     # and their IDs.
     #
+    # TODO: implement response wrapper
+    #
     def write_environment_list args={}
-      call dasherize(__method__), args
+      call __method__.dasherize, args
     end
 
     ##
@@ -186,11 +191,9 @@ module Velocity
     # function models.
     #
     # TODO: refactor some of this method into something includable
-    # TODO: move #dasherize to a monkeypatch of string and symbol
-    # TODO: implement #dedasherize
     #
     class APIModel
-
+      attr_accessor :instance
       def initialize(instance)
         @instance = instance
       end
@@ -203,13 +206,6 @@ module Velocity
         [prefix, operation].join '-'
       end
 
-      ##
-      # Convenience function for converting Ruby method names to Velocity API
-      # method names by replacing underscores with dashes.
-      #
-      def dasherize(string)
-        string.to_s.downcase.gsub(/_/,'-')
-      end
       ##
       # Get the hardcoded prefix for this model.
       #
@@ -224,7 +220,7 @@ module Velocity
       # This magical method enables a direct pass-through of methods if no
       # special logic is required to handle the response.
       def method_missing(function, *args, &block)
-        @instance.call resolve(function), args
+        instance.call resolve(function), args
       end
     end
 
@@ -520,7 +516,7 @@ module Velocity
       ##
       # Refresh the tags on an auto-classified collection
       def auto_classify_refresh_tags
-        api_method = dasherize(__method__)
+        api_method = __method__.dasherize
         raise NotImplementedError
       end
 
@@ -834,7 +830,7 @@ module Velocity
       # You must provide a +:str+ option in order to receive results.
       #
       def autocomplete_suggest args={}
-        api_method = dasherize(__method__)
+        api_method = __method__.dasherize
         instance.call api_method, args.merge({:dictionary=>name})
       end
       
