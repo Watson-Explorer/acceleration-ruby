@@ -1,11 +1,10 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path "../lib", __FILE__
 require "acceleration/version"
-require "semver"
 
 Gem::Specification.new do |s|
   s.name = "acceleration"
-  s.version = SemVer.find.format '%M.%m.%p' #Acceleration::VERSION
+  s.version = Acceleration::VERSION
   s.platform = Gem::Platform::RUBY
   s.authors = ["Colin Dean"]
   s.email = ["cdean@vivisimo.com"]
