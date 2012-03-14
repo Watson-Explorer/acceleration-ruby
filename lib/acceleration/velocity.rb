@@ -163,6 +163,25 @@ module Velocity
     end
 
     ##
+    # Determine the AXL service status
+    #
+    # Optionally supply a +:pool+ option.
+    #
+    def axl_service_status args={}
+      call dasherize(__method__), args
+    end
+
+    ##
+    # Write a list of feature environments to disk.
+    #
+    # Expects a +:environment_list+ option containing a list of environments
+    # and their IDs.
+    #
+    def write_environment_list args={}
+      call dasherize(__method__), args
+    end
+
+    ##
     # The APIModel is a very simple interface for building more complex API
     # function models.
     #
@@ -358,6 +377,100 @@ module Velocity
       Query.new(self)
     end
 
+    ## 
+    # CollectionBroker models an instance's collection broker, which can start
+    # and stop collections on demand. It's especially useful for when an
+    # instance has tens or hundreds of collections which cannot be
+    # simultaneously held in memory.
+    # 
+    # TODO: implement
+    class CollectionBroker < APIModel
+      def prefix
+        'collection-broker'
+      end
+      def initialize
+        raise NotImplementedError
+      end
+    end
+
+    ##
+    # Reports models an instance's reports system.
+    #
+    # TODO: implement
+    #
+    class Reports < APIModel
+      def prefix
+        'reports'
+      end
+      def initialize
+        raise NotImplementedError
+      end
+    end
+
+    ##
+    # Repository models an instance's configuration node repository, enabling
+    # a user to list, download, update, add, and delete configuration nodes.
+    #
+    # TODO: implement
+    #
+    class Repository < APIModel
+      def prefix
+        'repository'
+      end
+      def initialize
+        raise NotImplementedError
+      end
+    end
+
+    ##
+    # Scheduler models an instance's scheduler service. It can start and stop
+    # the service, as well as retrieve its status and list jobs. 
+    #
+    # The scheduler configuration can be only modified by updating the
+    # scheduler node in the repository.
+    #
+    # TODO: implement
+    #
+    class Scheduler < APIModel
+      def prefix
+        'scheduler'
+      end
+      def initialize
+        raise NotImplementedError
+      end
+    end
+
+    ##
+    # SearchService models an instance's search service, or more commonly
+    # called the _query_ _service_.
+    #
+    # TODO: implement
+    #
+    class SearchService < APIModel
+      def prefix
+        'search-service'
+      end
+      def initialize
+        raise NotImplementedError
+      end
+    end
+
+    ##
+    # SourceTest models an instance's source testing, which can automatically
+    # execute a test to know if a source is correctly returning expected
+    # results.
+    #
+    # TODO: implement
+    #
+    class SourceTest < APIModel
+      def prefix
+        'source-test'
+      end
+      def initialize
+        raise NotImplementedError
+      end
+    end
+
     ##
     # SearchCollection models a Velocity search collection and provides a set
     # of convenience methods for accessing its status, controlling its
@@ -402,6 +515,26 @@ module Velocity
       #
       def status
         Status.new instance.call resolve("status"), {:collection => name}
+      end
+
+      ##
+      # Refresh the tags on an auto-classified collection
+      def auto_classify_refresh_tags
+        api_method = dasherize(__method__)
+        raise NotImplementedError
+      end
+
+      ##
+      # Interact with annotations on a collection
+      #
+      # TODO: implement
+      class Annotation < APIModel
+        def prefix
+          'annotation'
+        end
+        def initialize
+          raise NotImplementedError
+        end
       end
 
 
@@ -542,8 +675,6 @@ module Velocity
         class IndexerStatus < ServiceStatus
           #TODO: implement convenience methods
         end
-
-
       end
 
       ##
@@ -633,8 +764,7 @@ module Velocity
           act 'full-merge', options
         end
       end
-
-    end
+    end #Velocity::Instance::SearchCollection
 
     ## 
     # Interact with a dictionary on the Velocity instance
@@ -697,16 +827,38 @@ module Velocity
       def delete
         act __method__
       end
+
+      ##
+      # Provide an autocompletion
+      #
+      # You must provide a +:str+ option in order to receive results.
+      #
+      def autocomplete_suggest args={}
+        api_method = dasherize(__method__)
+        instance.call api_method, args.merge({:dictionary=>name})
+      end
       
       def act action, args={}
         return instance.call resolve(action), args.merge({:dictionary => name})
       end
       private :act
+    end #Velocity::Instance::Dictionary
 
-
-
+    ##
+    # Interacts with alerts registered on the instance
+    #
+    # TODO: implement
+    #
+    class Alert < APIModel
+      def prefix
+        'alert'
+      end
+      def initialize
+        raise NotImplementedError
+      end
     end
-  end
+
+  end #Velocity::Instance
 
   ##
   # Generic Velocity API exception thrown when Velocity doesn't like the
@@ -741,5 +893,5 @@ module Velocity
     def to_s
       api_message
     end
-  end
+  end #Velocity::VelocityException
 end
