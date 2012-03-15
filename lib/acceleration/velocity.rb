@@ -1,6 +1,7 @@
+require 'acceleration/monkeypatches'
 ##
 # :main:Acceleration
-# = Acceleration
+# == Acceleration
 # 
 # by Colin Dean <cdean@vivisimo.com>
 # 
@@ -44,12 +45,38 @@
 # * http://nokogiri.org/Nokogiri.html
 # * http://zimonet.vivisimo.com/vivisimo/cgi-bin/query-meta?v%3asources=office&query=api%20documentation%20DOCUMENT_KEY%3a%22file%3a%2f%2f%3a80%2foffice%2fDocumentation%2f8.0-0%2fvelocity_api_developers_guide.pdf%2f%22&v%3aframe=cache&search-vfile=viv_mkzSm7&search-state=%28root%29%7croot&
 #
-require 'acceleration/monkeypatches'
 module Velocity
+  ##
+  # Models the instance. This is the top level object in the Velocity API. It
+  # models the actual Velocity server or instance.
+  #
   class Instance
-    attr_accessor :v_app, :endpoint, :username, :password, :read_timeout, :open_timeout
+    # The v_app in use. Defaults to +api-rest+.
+    attr_accessor :v_app
+    # The URL of the velocity CGI application on the instance.
+    attr_accessor :endpoint
+    # The username for the API user. Create this in the Admin Tool.
+    attr_accessor :username
+    # The password of the user.
+    attr_accessor :password
+    # How long Acceleration should wait for a response. Default is 120 seconds.
+    attr_accessor :read_timeout
+    # How long Acceleration should wait to connect to the instance. Default is
+    # 30 seconds.
+    attr_accessor :open_timeout
+    # The error a ping encounters.
     attr_reader :error
 
+
+    ##
+    # call-seq:
+    #   new(:endpoint => endpoint, :username => username, :password => password)
+    #
+    # Create a new instance of Instance. This is the model central to the gem.
+    # It facilitates all communication with the Velocity instance.
+    #
+    # Args passed in as a hash may include any attributes except +:error+.
+    #
     def initialize(args)
       @v_app = args[:v_app] || 'api-rest'
       @endpoint = args[:endpoint]
@@ -188,12 +215,16 @@ module Velocity
 
     ##
     # The APIModel is a very simple interface for building more complex API
-    # function models.
+    # function models. It shouldn't ever be instantiated itself.
     #
     # TODO: refactor some of this method into something includable
     #
     class APIModel
+      # A handle on the instance
       attr_accessor :instance
+      ##
+      # Create a new APIModel instance
+      #
       def initialize(instance)
         @instance = instance
       end
@@ -233,6 +264,9 @@ module Velocity
     # one yourself.
     #
     class Query < APIModel
+      ##
+      # The prefix for the query model
+      #
       def prefix
         "query"
       end
@@ -277,10 +311,14 @@ module Velocity
     # underlying XML document comprising the response.
     #
     class QueryResponse
+      # A handle on the XML document behind the response
       attr_accessor :doc
-
-      def initialize node
-        @doc = node
+      
+      ##
+      # Create a new QueryResponse given the response XML from Velocity
+      #
+      def initialize doc
+        @doc = doc
       end
 
       ##
@@ -314,8 +352,12 @@ module Velocity
     # provide several convenience methods.
     #
     class Document
+      # A handle on the XML of the document
       attr_accessor :doc
 
+      ##
+      # Create a new document XML element wrapper
+      #
       def initialize node
         @doc = node
       end
@@ -381,9 +423,13 @@ module Velocity
     # 
     # TODO: implement
     class CollectionBroker < APIModel
+      # The CollectionBroker prefix is +collection-broker+.
       def prefix
         'collection-broker'
       end
+      ##
+      # Create a new wrapper for the collection broker functions.
+      #
       def initialize
         raise NotImplementedError
       end
@@ -395,9 +441,11 @@ module Velocity
     # TODO: implement
     #
     class Reports < APIModel
+      # The Reports prefix is simply +reports+.
       def prefix
         'reports'
       end
+      # Create a new wrapper for reports management functions.
       def initialize
         raise NotImplementedError
       end
@@ -410,9 +458,11 @@ module Velocity
     # TODO: implement
     #
     class Repository < APIModel
+      # The Repository prefix is simply +repository+.
       def prefix
         'repository'
       end
+      # Create a new wrapper for the repository management functions.
       def initialize
         raise NotImplementedError
       end
@@ -428,9 +478,11 @@ module Velocity
     # TODO: implement
     #
     class Scheduler < APIModel
+      # The Scheduler prefix is simply +scheduler+.
       def prefix
         'scheduler'
       end
+      # Create a new wrapper for the scheduler functions.
       def initialize
         raise NotImplementedError
       end
@@ -443,9 +495,11 @@ module Velocity
     # TODO: implement
     #
     class SearchService < APIModel
+      #The SearchService prefix is +search-service+.
       def prefix
         'search-service'
       end
+      # Create a new wrapper for the search-service functions.
       def initialize
         raise NotImplementedError
       end
@@ -459,9 +513,11 @@ module Velocity
     # TODO: implement
     #
     class SourceTest < APIModel
+      # The SourceTest prefix is +source-test+.
       def prefix
         'source-test'
       end
+      # Create a new wrapper for the source-test functions.
       def initialize
         raise NotImplementedError
       end
@@ -473,17 +529,21 @@ module Velocity
     # activity, and even enqueuing documents and URLs.
     #
     class SearchCollection < APIModel
-      attr_accessor :name, :instance
-
+      # The name of the collection.
+      attr_accessor :name
+      # The SearchCollection prefix is +search-collection+.
       def prefix
         "search-collection"
       end
-
+      # Create a new SearchCollection wrapper.
       def initialize(collection_name)
         @name = collection_name
       end
       
       ##
+      # call-seq:
+      #   SearchCollection.new_from_xml(:xml => xml, :instance => instance)
+      #
       # Factory method used by Instance#collections
       #
       def self.new_from_xml(args)
@@ -493,51 +553,65 @@ module Velocity
       end
 
       ##
-      # Get a handle on the crawler service
+      # Get a handle on the crawler service.
       #
       def crawler
         Crawler.new self
       end
 
       ##
-      # Get a handle on the indexer service
+      # Get a handle on the indexer service.
       #
       def indexer
         Indexer.new self
       end
 
       ##
-      # Retrieve the status of the collection
+      # Retrieve the status of the collection.
       #
-      def status
+      # Optionally pass +:subcollection => 'live' or 'staging'+ to choose which
+      # subcollection. Default is +'live'+.
+      #
+      # Optionally pass +:stale_ok+ boolean to receive stats that may be
+      # behind.
+      #
+      def status args={}
         Status.new instance.call resolve("status"), {:collection => name}
       end
 
       ##
-      # Refresh the tags on an auto-classified collection
+      # Refresh the tags on an auto-classified collection.
+      #
       def auto_classify_refresh_tags
         api_method = __method__.dasherize
         raise NotImplementedError
       end
 
       ##
-      # Interact with annotations on a collection
+      # Interact with annotations on a collection.
       #
       # TODO: implement
       class Annotation < APIModel
+        # The Annotation prefix is simply +annotation+.
         def prefix
           'annotation'
         end
+        # Create a new wrapper for the annotation functions.
         def initialize
           raise NotImplementedError
         end
       end
 
-
+      ##
+      # This models the collection status XML returned by Velocity.
+      #
       class Status
         # The raw document describing the status
         attr_accessor :doc
 
+        ##
+        # Create a new wrapper for the status XML
+        #
         def initialize doc
           @doc = doc
         end
@@ -565,10 +639,14 @@ module Velocity
           doc.xpath("__CONTAINER__").empty?
         end
 
+        ##
+        # An abstracted wrapper for the various parts of the collection status 
+        # XML returned by Velocity.
+        #
         class ServiceStatus
           # The raw document describing the status
           attr_accessor :doc
-
+          # Create a new service status wrapper
           def initialize doc
             @doc = doc
           end
@@ -670,6 +748,29 @@ module Velocity
         #
         class IndexerStatus < ServiceStatus
           #TODO: implement convenience methods
+          #
+          ##
+          # Get index serving status
+          #
+          def serving
+            doc.xpath('vse-serving').first do |s|
+              attrs = {}
+              s.attributes.each do |key, sattr|
+                attrs[key.dedasherize.to_sym] = sattr
+              end
+              attrs
+            end
+          end
+          ##
+          # Get information about the index files
+          #
+          # The content counts per file are available in a subarray at key
+          # +:contents+.
+          #
+          def files
+            doc.xpath('vse-index-file').collection do |f|
+            end
+          end
         end
       end
 
@@ -677,7 +778,13 @@ module Velocity
       # A model for the collections' services
       #
       class CollectionService < APIModel
+        # The collection being controlled
         attr_accessor :collection
+
+        ##
+        # Create a new wrapper for collection services for the given
+        # collection.
+        #
         def initialize collection
           @collection = collection
         end
@@ -733,20 +840,41 @@ module Velocity
       ##
       # The Crawler service of the collection
       #
+      # Methods implied by method_missing:
+      # - start
+      # - stop 
+      # - restart
+      #
       class Crawler < CollectionService
-        #implied by method_missing:
-        #start, stop, restart
+        # The prefix for interacting with the Velocity API.
         def prefix
           collection.prefix + "-crawler"
         end
+
+        ##
+        # Get the status of the crawler
+        #
+        # This is a convenience method for Status#crawler. See
+        # SearchCollection#status for optional arguments.
+        #
+        def status args={}
+          collection.status(args).crawler
+        end
+
       end
 
       ##
       # The Indexer service of the collection
+      # 
+      # Methods implied by method_missing:
+      # - start
+      # - stop 
+      # - restart
       #
       class Indexer < CollectionService
-        #implied by method_missing:
-        #start, stop, restart, full-merge
+        #
+        ##
+        # The prefix for interacting via the Velocity API.
         def prefix
           collection.prefix + "-indexer"
         end
@@ -759,6 +887,15 @@ module Velocity
         def full_merge options={}
           act 'full-merge', options
         end
+        ##
+        # Get the status of the indexer
+        #
+        # This is a convenience method for Status#indexer. See
+        # SearchCollection#status for optional arguments.
+        #
+        def status args={}
+          collection.status(args).indexer
+        end
       end
     end #Velocity::Instance::SearchCollection
 
@@ -769,20 +906,28 @@ module Velocity
     # Velocity::Instance#dictionaries.
     #
     class Dictionary < APIModel
-      attr_accessor :name, :instance
+      # The name of the dictionary.
+      attr_accessor :name
+      #The Dictionary prefix is simply +dictionary+.
       def prefix
         'dictionary'
       end
       private :prefix
+
       ##
-      # Factory method used by Instance#collections
+      # call-seq:
+      #   Dictionary.new_from_xml(:xml => xml, :instance => instance)
+      #
+      # Factory method used by Instance#dictionaries
       #
       def self.new_from_xml(args)
         d = Dictionary.new(args[:xml].attributes['name'].to_s)
         d.instance = args[:instance]
         return d
       end
-
+      ##
+      # Create a new wrapper for a dictionary
+      #
       def initialize name
         @name = name
       end
@@ -791,6 +936,7 @@ module Velocity
       # Get the dictionary's status object
       #
       # TODO: wrap the XML returned
+      #
       def status
         act 'status-xml'
       end
@@ -846,9 +992,13 @@ module Velocity
     # TODO: implement
     #
     class Alert < APIModel
+      #The prefix for Alert is simply +alert+.
       def prefix
         'alert'
       end
+      ##
+      # Create a new wrapper for the Alerts interface.
+      #
       def initialize
         raise NotImplementedError
       end

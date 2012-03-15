@@ -1,3 +1,8 @@
+##
+# Monkeypatches on String to provide convenience methods
+#
+# _Warning:_ these could go away at any time, so do not rely on their continued
+# existence. They should only be used internally within the Acceleration gem.
 class String
   ##
   # Convenience function for converting Ruby method names to Velocity API
@@ -14,6 +19,11 @@ class String
   end
 end
 
+##
+# Monkeypatches on Symbol to provide convenience methods
+#
+# _Warning:_ these could go away at any time, so do not rely on their continued
+# existence. They should only be used internally within the Acceleration gem.
 class Symbol
   ##
   # Convenience function for converting Ruby method names to Velocity API

@@ -7,5 +7,5 @@ task :console do
 end
 desc "Compile documentation using RDoc"
 task :doc do
-  sh "rdoc lib"
+  sh "rdoc --main Velocity lib"
 end
