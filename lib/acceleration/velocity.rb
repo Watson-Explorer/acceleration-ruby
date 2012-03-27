@@ -1040,4 +1040,57 @@ module Velocity
       api_message
     end
   end #Velocity::VelocityException
+
+  ##
+  # Chico is an AXL runner. It allows a user to try small snippets of AXL, the
+  # language Velocity uses to glue its parts together.
+  #
+  # Warning: Velocity::Chico may move to Velocity::Instance::Chico in the
+  # future.
+  #
+  class Chico < Instance
+    #The content type to be sent. Default is text/xml.
+    attr_reader :content_type
+    ##
+    # call-seq:
+    #   new(:endpoint => endpoint, :username => username, :password => password)
+    #
+    # Create a new Chico instance. This wraps around Instance constructor and
+    # sets +:v_app+ to 'chico'.
+    #
+    def initialize args={}
+      super(args.merge({:v_app => 'chico'}))
+      @content_type = 'text/xml'
+    end
+    ##
+    # call-seq:
+    #   run(xml)
+    #   run(:xml => xml)
+    #
+    # Run an AXL snippet on Chico
+    #
+    # Expects a String or a Hash with a key +:xml+ containing the AXL to be run.
+    #
+    def run xml
+      raise ArgumentError, "Need some AXL to process." if !([String, Hash].member? xml.class) or xml.empty?
+
+      if xml.class == Hash and xml.has_key? :xml
+        h = xml
+      elsif xml.class == String
+        h = { :xml => xml }
+      end
+      run_with h
+    end
+    ##
+    # call-seq:
+    #   run_with(:xml => xml, ...)
+    #
+    # Run an XML snippet with more options, such as +:profile+ => 'profile'.
+    #
+    def run_with args={}
+      raise ArgumentError, "Need an :xml key containing some AXL to process." if args.nil? or !args.has_key? :xml or args[:xml].empty?
+      call nil, {:content_type => @content_type, :backend=>'backend'}.merge(args)
+    end
+
+  end
 end
