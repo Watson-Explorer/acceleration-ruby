@@ -4,5 +4,5 @@
 # If you're looking for the real documentation, see the Velocity module documentation.
 module Acceleration
   #The version of the Acceleration gem.
-  VERSION = "0.0.6"
+  VERSION = "0.0.7"
 end

@@ -998,9 +998,9 @@ module Velocity
         # The suggestions array
         attr_reader :suggestions
         #Create a new set of suggestions
-        def initialize query, phrases={}, xml=nil
+        def initialize query, suggestions={}, xml=nil
           @query = query
-          @phrases = phrases
+          @suggestions = suggestions
           @doc = xml
         end
         #Create a new set of suggestions given some XML from Velocity
