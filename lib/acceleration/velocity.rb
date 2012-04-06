@@ -971,14 +971,80 @@ module Velocity
       end
 
       ##
+      # call-seq:
+      #  autocomplete_suggest(:str => "")
+      #
       # Provide an autocompletion
       #
       # You must provide a +:str+ option in order to receive results.
       #
       def autocomplete_suggest args={}
         api_method = __method__.dasherize
-        instance.call api_method, args.merge({:dictionary=>name})
+        AutocompleteSuggestionSet.new_from_xml(instance.call api_method, args.merge({:dictionary=>name}))
       end
+
+      ##
+      # A simple wrapper for autocomplete suggestions
+      #
+      # Created only by Dictionary#autocomplete_suggest. Note that the
+      # suggestions will already be in descending order by number of
+      # occurrences.
+      #
+      class AutocompleteSuggestionSet
+        # The raw XML
+        attr_accessor :doc
+        # The original text to be autocompleted
+        attr_reader :query
+        # The suggestions array
+        attr_reader :suggestions
+        #Create a new set of suggestions
+        def initialize query, phrases={}, xml=nil
+          @query = query
+          @phrases = phrases
+          @doc = xml
+        end
+        #Create a new set of suggestions given some XML from Velocity
+        def self.new_from_xml xml
+          as = AutocompleteSuggestionSet.new(
+            xml.xpath("/suggestions/@query").first.value, 
+            xml.xpath("/suggestions/suggestion").collect { |s| AutocompleteSuggestion.new_from_xml s },
+            xml
+          )
+        end
+      end
+
+      ##
+      # A simple wrapper for an autocomplete suggestion
+      #
+      class AutocompleteSuggestion
+        # The xml
+        attr_accessor :doc
+        # The phrase
+        attr_reader :phrase
+        # The number of occurrences
+        attr_reader :count
+        # Create a new suggestion
+        def initialize phrase, count=0, xml=nil
+          @phrase = phrase
+          @count = count
+          @doc = xml
+        end
+        #Create a new suggestion given some XML from Velocity
+        def self.new_from_xml xml
+          AutocompleteSuggestion.new(
+            xml.children.first.text,
+            xml.attributes["count"].value.to_i,
+            xml
+          )
+        end
+        #This is really only ever going to be used as a string
+        def to_s
+          phrase
+        end
+
+      end
+
+
       
       def act action, args={}
         return instance.call resolve(action), args.merge({:dictionary => name})
