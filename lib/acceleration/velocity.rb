@@ -649,20 +649,27 @@ module Velocity
           # Create a new service status wrapper
           def initialize doc
             @doc = doc
+            @attrs = {}
+          end
+          ##
+          # Ensure that the status is actually there
+          #
+          def has_status?
+            !doc.nil?
           end
 
           ##
-          # Return a hash of all attributes
+          # Return a symbol-keyed hash of all attributes
           #
           # This method resolves the value of all of the Nokogiri attributes so
           # that you don't have to.
           #
           def attributes
-            attrs = {}
+            return @attrs if !@attrs.empty?
             doc.attributes.each do |key,nattr|
-              attrs[key] = nattr.value
+              @attrs[key.to_sym.dedasherize] = nattr.value
             end
-            return attrs
+            return @attrs
           end
 
           ##
@@ -675,15 +682,16 @@ module Velocity
           ##
           # Capture attributes accessed as instance variables
           #
-          # def method_missing (function, *args, &block)
-          #   if doc.attributes.member? function.to_s
-          #     attribute function.to_s
-          #   else if doc.attributes.member? "n-" + function.to_s
-          #     attribute function.to_s
-          #   else
-          #     super(function, args, block)
-          #   end
-          # end
+          def method_missing (function, *args, &block)
+            f = function.to_s.dasherize
+            if doc.attributes.member? f
+              attribute f
+            elsif doc.attributes.member? "n-" + f
+              attribute "n-" + f
+            else
+              super(function, args, block)
+            end
+          end
         end
 
         ##
