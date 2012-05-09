@@ -303,6 +303,49 @@ module Velocity
         QueryResponse.new(@instance.call(resolve('similar-documents'), args))
       end
 
+      ##
+      # This helper provides a programatic way to construct +:sort-xpaths+ XML for
+      # +query-search+
+      #
+      # The expected usage of this is to put any Sorts in an array and then
+      # Array#join them when setting the +:sort-xpaths+ parameter of
+      # Query#search.
+      class Sort
+        #The xpath to the content to be sorted
+        attr_accessor :xpath
+        
+        # The order in which it should be sorted
+        attr_accessor :order
+        
+        #valid orders
+        VALID_ORDERS = [:ascending, :descending, nil]
+        
+        # call-seq:
+        #   new(:order => order, :xpath => xpath)
+        #
+        # Create a new Sort helper
+        def initialize args
+          @xpath = args[:xpath]
+          @order = args[:order] || VALID_ORDERS.first
+        end
+        
+        # Create an XML string from the Sort object
+        def to_s
+          sane?
+          builder = Nokogiri::XML::Builder.new do |xml|
+            xml.sort(:xpath => xpath, :order => order )
+          end
+          #this is necessary to suppress the xml version declaration
+          Nokogiri::XML(builder.to_xml).root.to_xml
+        end
+        
+        private
+
+        # Set the order, ensuring that it's valid
+        def sane?
+          raise ArgumentError, ":order must be one of #{VALID_ORDERS}" unless VALID_ORDERS.member? order
+        end
+      end
     end
 
     ##
