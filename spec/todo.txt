@@ -1,0 +1,1 @@
+use rspec-xml to do integration testing, assuming a blank sandbox
