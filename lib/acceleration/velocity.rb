@@ -1,3 +1,4 @@
+require 'logger'
 require 'acceleration/monkeypatches'
 ##
 # :main:Acceleration
@@ -46,6 +47,12 @@ require 'acceleration/monkeypatches'
 # * http://zimonet.vivisimo.com/vivisimo/cgi-bin/query-meta?v%3asources=office&query=api%20documentation%20DOCUMENT_KEY%3a%22file%3a%2f%2f%3a80%2foffice%2fDocumentation%2f8.0-0%2fvelocity_api_developers_guide.pdf%2f%22&v%3aframe=cache&search-vfile=viv_mkzSm7&search-state=%28root%29%7croot&
 #
 module Velocity
+  ##
+  # Velocity::Logger is just an instance of stdlib Logger. It can be easily
+  # replaced by Rails logger or whatever
+  Logger = ::Logger.new(STDERR)
+  Logger.level = ::Logger::WARN
+
   ##
   # Models the instance. This is the top level object in the Velocity API. It
   # models the actual Velocity server or instance.
@@ -97,7 +104,7 @@ module Velocity
     #
     def call(function, args={})
       sanity_check
-      puts "calling #{function} with args: #{args}"
+      Logger.info "calling #{function} with args: #{args}"
       if args.class == Array and args.empty?
         args = {}
       elsif !args.empty? and args.first.class == Hash
@@ -120,9 +127,21 @@ module Velocity
       req = {:method => :get, :url => endpoint, :headers => {:params => params } } #restclient stupidly puts query params in the...headers?
       req[:timeout] = read_timeout if read_timeout
       req[:open_timeout] = open_timeout if open_timeout
-      puts "hitting #{endpoint} with params: #{params}"
+      Logger.info "hitting #{endpoint} with params: #{clean_password(params)}"
       RestClient::Request.execute(req) 
     end
+
+    def clean_password params_hash
+      params_hash.each_pair do |key,value|
+        if key.include? "password"
+          params_hash[key] = "md5:" + Digest::MD5.hexdigest(value)
+        else
+          params_hash[key] = value
+        end
+      end
+      params_hash
+    end
+    private :clean_password
 
     ##
     # Assemble a hash with the basic parameters for the instance. 
