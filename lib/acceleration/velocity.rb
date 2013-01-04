@@ -127,7 +127,7 @@ module Velocity
       req = {:method => :get, :url => endpoint, :headers => {:params => params } } #restclient stupidly puts query params in the...headers?
       req[:timeout] = read_timeout if read_timeout
       req[:open_timeout] = open_timeout if open_timeout
-      Logger.info "hitting #{endpoint} with params: #{clean_password(params)}"
+      Logger.info "hitting #{endpoint} with params: #{clean_password(params.clone)}"
       RestClient::Request.execute(req) 
     end
 
