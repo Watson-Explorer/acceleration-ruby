@@ -133,7 +133,7 @@ module Velocity
 
     def clean_password params_hash
       params_hash.each_pair do |key,value|
-        if key.include? "password"
+        if key.to_s.include? "password"
           params_hash[key] = "md5:" + Digest::MD5.hexdigest(value)
         else
           params_hash[key] = value
