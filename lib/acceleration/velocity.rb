@@ -253,7 +253,7 @@ module Velocity
       # operation.
       #
       def resolve(operation)
-        [prefix, operation].join '-'
+        [prefix, operation.dasherize].join '-'
       end
 
       ##
@@ -517,17 +517,45 @@ module Velocity
     # Repository models an instance's configuration node repository, enabling
     # a user to list, download, update, add, and delete configuration nodes.
     #
-    # TODO: implement
+    # Create a new wrapper for the repository management functions. The
+    # following methods are handled via method_missing and are thus documented
+    # here.
+    #
+    # * <tt>add(:xml => xml)</tt> - Add a node to the repository.
+    # * <tt>delete(:element => element, :name => name, :md5 => md5)</tt> - Delete a node from the repository. +:md5+ is optional.
+    # * <tt>get(:element => element, :name => name)</tt> - Get a node from the repository.
+    # * <tt>get_md5(:element => element, :name => name)</tt> - Get a node with its md5 hash from the repository.
+    # * <tt>list_xml()</tt> - List the xml nodes in the repository.
+    # * <tt>update(:xml => xml, :md5 => md5)</tt> - Update a node that is already in the repository. +:md5+ is optional.
+    #
+    # Any return value will be raw +Nokogiri::XML::Document+ object.
     #
     class Repository < APIModel
       # The Repository prefix is simply +repository+.
       def prefix
         'repository'
       end
-      # Create a new wrapper for the repository management functions.
-      def initialize
-        raise NotImplementedError
+      # List all nodes as nodespecs
+      def list_xml_specs internal=false
+        arr = []
+        xml = list_xml
+        xml.child.children.each do |c|
+          if !c.has_attribute?("internal") || (c.has_attribute?("internal") and internal)
+            arr << "%s.%s" % [c.name(), c.attr("name")]
+          end
+        end
+        return arr
       end
+      # Get a node given its nodespec in the form +element.@name+
+      def get_nodespec nodespec
+        element, name = nodespec.split "."
+        get :element => element, :name => name
+      end
+    end
+
+    #Get a handle on the repository
+    def repository
+      Repository.new(self)
     end
 
     ##
