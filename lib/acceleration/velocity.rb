@@ -531,12 +531,12 @@ module Velocity
     # following methods are handled via method_missing and are thus documented
     # here.
     #
-    # * <tt>add(:xml => xml)</tt> - Add a node to the repository.
+    # * <tt>add(:node => xml)</tt> - Add a node to the repository.
     # * <tt>delete(:element => element, :name => name, :md5 => md5)</tt> - Delete a node from the repository. +:md5+ is optional.
     # * <tt>get(:element => element, :name => name)</tt> - Get a node from the repository.
     # * <tt>get_md5(:element => element, :name => name)</tt> - Get a node with its md5 hash from the repository.
     # * <tt>list_xml()</tt> - List the xml nodes in the repository.
-    # * <tt>update(:xml => xml, :md5 => md5)</tt> - Update a node that is already in the repository. +:md5+ is optional.
+    # * <tt>update(:node => xml, :md5 => md5)</tt> - Update a node that is already in the repository. +:md5+ is optional.
     #
     # Any return value will be raw +Nokogiri::XML::Document+ object.
     #
