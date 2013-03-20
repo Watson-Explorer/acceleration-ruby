@@ -127,8 +127,18 @@ module Velocity
       req = {:method => :get, :url => endpoint, :headers => {:params => params } } #restclient stupidly puts query params in the...headers?
       req[:timeout] = read_timeout if read_timeout
       req[:open_timeout] = open_timeout if open_timeout
-      Logger.info "hitting #{endpoint} with params: #{clean_password(params.clone)}"
-      RestClient::Request.execute(req) 
+      Logger.info "#hitting #{endpoint} with params: #{clean_password(params.clone)}"
+      begin
+        request = RestClient::Request.execute(req)
+      rescue RestClient::RequestURITooLong => e
+        Logger.info "Server says #{e}, retrying with POST..."
+        #try a post. I don't like falling back like this, but pretty much
+        #everything but repository actions will be under the standard limit
+        req.delete(:headers)
+        req[:payload] = params
+        req[:method] = :post
+        RestClient::Request.execute(req)
+      end
     end
 
     def clean_password params_hash
