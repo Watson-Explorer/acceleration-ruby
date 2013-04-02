@@ -12,6 +12,9 @@ Acceleration provides a succinct, ActiveResource-style interface to a Vivísimo
 Velocity search platform instance's REST API. Acceleration is derived from
 Velocity.
 
+[Acceleration](https://wiki.vivisimo.com/Acceleration) is maintained by the [Platform Tools
+Group](https://wiki.vivisimo.com/Platform_Tools_Group).
+
 Installation
 ------------
 
