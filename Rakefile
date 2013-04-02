@@ -9,3 +9,13 @@ desc "Compile documentation using RDoc"
 task :doc do
   sh "rdoc --main Velocity lib"
 end
+
+module Bundler
+  class GemHelper
+    protected
+      def rubygem_push(path)
+        puts "** running gem inabox '#{path}'"
+        sh "gem inabox '#{path}'"
+      end
+  end
+end
