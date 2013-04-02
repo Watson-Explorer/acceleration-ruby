@@ -12,6 +12,29 @@ Acceleration provides a succinct, ActiveResource-style interface to a Vivísimo
 Velocity search platform instance's REST API. Acceleration is derived from
 Velocity.
 
+Installation
+------------
+
+There are a two places to get Acceleration.
+
+### Gems.vivisimo.com
+
+Install manually:
+
+    gem sources -a https://gems.vivisimo.com/
+    gem install acceleration
+
+or add this to your Gemfile:
+
+    source "https://gems.vivisimo.com"
+    gem "acceleration"
+
+### From source
+
+Add this to your Gemfile:
+
+    gem 'acceleration', :git => "git@gitlab.vivisimo.com:acceleration.git"
+
 Contributing
 ------------
 Source: https://gitlab.vivisimo.com/acceleration
