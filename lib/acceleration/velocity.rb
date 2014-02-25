@@ -1,4 +1,6 @@
 require 'logger'
+require 'restclient'
+require 'nokogiri'
 require 'acceleration/monkeypatches'
 ##
 # :main:Acceleration
