@@ -1,3 +1,3 @@
 source "https://rubygems.org"
-source "https://gems.vivisimo.com"
+source "https://gems.bigdatalab.ibm.com"
 gemspec

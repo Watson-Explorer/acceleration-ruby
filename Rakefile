@@ -3,7 +3,7 @@ Bundler::GemHelper.install_tasks
 
 desc "Open an IRB session preloaded with Acceleration"
 task :console do
-  sh "pry -rubygems -I lib -r acceleration.rb"
+  sh "pry -rubygems -I lib -racceleration"
 end
 desc "Compile documentation using RDoc"
 task :doc do
