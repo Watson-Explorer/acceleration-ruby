@@ -674,7 +674,7 @@ module Velocity
       # Optionally pass +:subcollection => 'live' or 'staging'+ to choose which
       # subcollection. Default is +'live'+.
       #
-      # Optionally pass +:stale_ok+ boolean to receive stats that may be
+      # Optionally pass +:'stale-ok'+ boolean to receive stats that may be
       # behind.
       #
       def status args={}
@@ -687,6 +687,30 @@ module Velocity
       def auto_classify_refresh_tags
         api_method = __method__.dasherize
         raise NotImplementedError
+      end
+
+      ##
+      # Set collection XML
+      #
+      # This is more appropriate for collections than Repository#update because
+      # it correctly separates parts of the collection configuration that must
+      # go into the repository from parts that are saved in a status file.
+      #
+      def set_xml args={}
+        instance.call resolve("set-xml"), args.merge(:collection => name)
+      end
+
+      ##
+      # Get collection XML
+      #
+      # Pull the collection from the collection service or using a saved copy
+      #
+      # Optionally pass +:'stale-ok' => true or false+ to indicate if a stale
+      # copy is OK. Requesting a fresh copy may extend the request. Default is
+      # false.
+      #
+      def xml args={}
+        instance.call resolve("xml"), {:collection => name, :'stale-ok' => false}.merge(args)
       end
 
       ##
