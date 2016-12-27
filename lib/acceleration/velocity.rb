@@ -6,12 +6,12 @@ require 'acceleration/monkeypatches'
 # :main:Acceleration
 # == Acceleration
 #
-# by Colin Dean <cdean@vivisimo.com>
+# by Colin Dean <colindean@us.ibm.com>
 #
-# (c) 2012 Vivisimo, Inc.
+# (C) Copyright IBM Corp. 2012-2016. All Rights Reserved.
 #
-# For services and training around this library, please contact Vivisimo
-# Professional Services.
+# For services and training around this library, please contact an IBM Watson
+# Solution Architect.
 #
 # == Introduction
 #
