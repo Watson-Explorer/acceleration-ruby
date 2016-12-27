@@ -18,6 +18,12 @@ Gem::Specification.new do |s|
   s.add_development_dependency "pry"
   s.add_development_dependency "bundler"
   s.add_development_dependency "geminabox", "~> 0.10"
+  s.add_development_dependency "rake"
+
+  s.add_development_dependency 'guard', '~> 2.14.0'
+  s.add_development_dependency 'guard-bundler', '~> 2.1.0'
+  s.add_development_dependency 'guard-rubocop', '~> 1.2.0'
+  s.add_development_dependency 'ruby_gntp', '~> 0.3.0'
 
   s.files = `git ls-files`.split("\n")
   s.test_files = `git ls-files -- {test,spec,features}/*`.split("\n")
