@@ -1,66 +1,34 @@
 Acceleration
 ============
 
-A succinct interface to the Vivísimo Velocity API
+A succinct interface to the IBM Watson Explorer Foundational Components Engine REST API
 
-by Colin Dean <cdean@vivisimo.com>
+by Colin Dean <colindean@us.ibm.com>
 
 Introduction
 ------------
 
-Acceleration provides a succinct, ActiveResource-style interface to a Vivísimo
-Velocity search platform instance's REST API. Acceleration is derived from
-Velocity.
+Acceleration provides a succinct, ActiveResource-style interface to a IBM Watson Explorer Foundational Components (WEX-FC) Engine search platform instance's REST API.
 
-[Acceleration](https://wiki.vivisimo.com/Acceleration) is maintained by the [Platform Tools
-Group](https://wiki.vivisimo.com/Platform_Tools_Group).
+The name comes from WEX-FC's pre-acquisition name, Vivísimo Velocity. Acceleration is derived from Velocity. Get it?
 
 Installation
 ------------
 
-There are a two places to get Acceleration.
-
-### Gems.vivisimo.com
-
-Install manually:
-
-    gem sources -a https://gems.vivisimo.com/
-    gem install acceleration
-
-or add this to your Gemfile:
-
-    source "https://gems.vivisimo.com"
-    gem "acceleration"
-
-### From source
-
-Add this to your Gemfile:
-
-    gem 'acceleration', :git => "git@gitlab.vivisimo.com:acceleration.git"
+_to be completed_
 
 Contributing
 ------------
-Source: https://gitlab.vivisimo.com/acceleration
-
-Issues: https://gitlab.vivisimo.com/acceleration/issues
-
-Pull Requests: https://gitlab.vivisimo.com/acceleration/merge_requests
 
 Please test all changes against Ruby 1.9.3+ and JRuby 1.7+. Proper testing
 infrastructure is more than welcome!
 
 ### Getting started
 
-This assumes that you already have [RVM](http://rvm.io) installed and
-a requisite Ruby installed.
-
 Check out the source:
 
-    git clone git@gitlab.vivisimo.com:acceleration.git
-    cd acceration
-
-Accept the RVM notice. If you don't already have the required version of Ruby
-installed, install it with `rvm install $rvm_recommended_ruby`.
+    git clone git@github.ibm.com:Watson-Explorer/acceleration.git
+    cd acceleration
 
 Install dependencies:
 
@@ -82,4 +50,3 @@ execute `semver inc patch`, or whatever else is appropriate for the release.
 Then, commit the changes to `lib/acceleration/version.rb` and `.semver` with
 `git commit -a -m "version $(semver tag)"` and then tag it with `git tag
 $(semver tag)`.
-
