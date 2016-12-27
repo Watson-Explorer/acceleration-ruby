@@ -112,12 +112,9 @@ module Velocity
       end
       params = base_parameters.merge({ 'v.function' => function }.merge(args))
       result = Nokogiri::XML(rest_call(params))
-      if VelocityException.exception? result
-        raise VelocityException, result
-      else
-        @error = nil
-        return result
-      end
+      raise VelocityException, result if VelocityException.exception? result
+      @error = nil
+      result
     end
 
     ##
@@ -144,11 +141,11 @@ module Velocity
 
     def clean_password(params_hash)
       params_hash.each_pair do |key, value|
-        if key.to_s.include? 'password'
-          params_hash[key] = 'md5:' + Digest::MD5.hexdigest(value)
-        else
-          params_hash[key] = value
-        end
+        params_hash[key] = if key.to_s.include? 'password'
+                             'md5:' + Digest::MD5.hexdigest(value)
+                           else
+                             value
+                           end
       end
       params_hash
     end
@@ -174,7 +171,7 @@ module Velocity
       begin
         n = call 'ping'
         return true if n.root.name == 'pong'
-      rescue Exception => e
+      rescue StandardError => e
         @error = e
       end
       false
@@ -283,6 +280,12 @@ module Velocity
       # special logic is required to handle the response.
       def method_missing(function, *args)
         instance.call resolve(function), args
+      rescue
+        super
+      end
+
+      def respond_to_missing?(_function, _include_private = false)
+        true
       end
     end
 
@@ -562,7 +565,7 @@ module Velocity
         xml = list_xml
         xml.child.children.each do |c|
           if !c.has_attribute?('internal') || (c.has_attribute?('internal') && internal)
-            arr << '%s.%s' % [c.name, c.attr('name')]
+            arr << '%s.%s'.format([c.name, c.attr('name')])
           end
         end
         arr
@@ -832,7 +835,16 @@ module Velocity
             elsif doc.attributes.member? 'n-' + f
               attribute 'n-' + f
             else
-              super(function, args, block)
+              super
+            end
+          end
+
+          def respond_to_missing?(function, include_private = false)
+            f = function.to_s.dasherize
+            if doc.attributes.member?(f) || doc.attributes.member?('n-' + f)
+              true
+            else
+              super(function, include_private)
             end
           end
         end
@@ -1138,8 +1150,8 @@ module Velocity
       #
       def autocomplete_suggest(args = {})
         api_method = __method__.dasherize
-        AutocompleteSuggestionSet.new_from_xml
-          instance.call(api_method, args.merge(dictionary: name))
+        asargs = args.merge(dictionary: name)
+        AutocompleteSuggestionSet.new_from_xml instance.call(api_method, asargs)
       end
 
       ##
