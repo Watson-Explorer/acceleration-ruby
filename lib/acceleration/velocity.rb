@@ -127,7 +127,7 @@ module Velocity
       req[:open_timeout] = open_timeout if open_timeout
       Logger.info "#hitting #{endpoint} with params: #{clean_password(params.clone)}"
       begin
-        request = RestClient::Request.execute(req)
+        RestClient::Request.execute(req)
       rescue RestClient::RequestURITooLong => e
         Logger.info "Server says #{e}, retrying with POST..."
         # try a post. I don't like falling back like this, but pretty much
@@ -702,7 +702,7 @@ module Velocity
       # Refresh the tags on an auto-classified collection.
       #
       def auto_classify_refresh_tags
-        api_method = __method__.dasherize
+        # api_method = __method__.dasherize
         raise NotImplementedError
       end
 
