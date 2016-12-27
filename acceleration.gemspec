@@ -7,10 +7,10 @@ Gem::Specification.new do |s|
   s.version = Acceleration::VERSION
   s.platform = Gem::Platform::RUBY
   s.authors = ["Colin Dean"]
-  s.email = ["cdean@vivisimo.com"]
-  s.homepage = "http://www.vivisimo.com"
-  s.summary = %q{A succinct interface to the Vivísimo Velocity API}
-  s.description = %q{Acceleration provides a succinct, ActiveResource-style interface to a Vivísimo Velocity search platform instance's REST API. Acceleration is derived from Velocity.}
+  s.email = ["colindean@us.ibm.com"]
+  s.homepage = "https://github.com/watson-explorer"
+  s.summary = %q{A succinct interface to the A succinct interface to the IBM Watson Explorer Foundational Components Engine REST API}
+  s.description = %q{Acceleration provides a succinct, ActiveResource-style interface to a A succinct interface to the IBM Watson Explorer Foundational Components Engine search platform instance's REST API. Acceleration is derived from Velocity, the original name for Engine.}
 
   s.add_runtime_dependency "nokogiri"
   s.add_runtime_dependency "rest-client"
