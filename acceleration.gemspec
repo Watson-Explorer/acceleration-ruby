@@ -9,17 +9,20 @@ Gem::Specification.new do |s|
   s.authors = ['Colin Dean']
   s.email = ['colindean@us.ibm.com']
   s.homepage = 'https://github.com/watson-explorer'
-  s.summary = 'A succinct interface to the A succinct interface to the IBM Watson Explorer Foundational Components Engine REST API'
-  s.description = "Acceleration provides a succinct, ActiveResource-style interface to a A succinct interface to the IBM Watson Explorer Foundational Components Engine search platform instance's REST API. Acceleration is derived from Velocity, the original name for Engine."
+  product_name = 'IBM Watson Explorer Foundational Components Engine'
+  s.summary = "A succinct interface to to the #{product_name} REST API"
+  s.description = <<-END.gsub(/^ {6}/, '')
+      Acceleration provides a succinct, ActiveResource-style interface to a the
+      #{product_name} search platform instance's REST API. Acceleration is
+      derived from Velocity, the original name for Engine.
+      END
 
-  s.add_runtime_dependency 'nokogiri'
-  s.add_runtime_dependency 'rest-client'
-  s.add_development_dependency 'semver'
-  s.add_development_dependency 'pry'
-  s.add_development_dependency 'bundler'
+  ['nokogiri', 'rest-client'].each { |d| s.add_runtime_dependency d }
+  %w(semver pry bundler rake).each do |version_unspecified|
+    s.add_development_dependency version_unspecified
+  end
+
   s.add_development_dependency 'geminabox', '~> 0.10'
-  s.add_development_dependency 'rake'
-
   s.add_development_dependency 'guard', '~> 2.14.0'
   s.add_development_dependency 'guard-bundler', '~> 2.1.0'
   s.add_development_dependency 'guard-rubocop', '~> 1.2.0'
@@ -27,6 +30,7 @@ Gem::Specification.new do |s|
 
   s.files = `git ls-files`.split("\n")
   s.test_files = `git ls-files -- {test,spec,features}/*`.split("\n")
-  s.executables = `git ls-files -- bin/*`.split("\n").map { |f| File.basename(f) }
+  s.executables = `git ls-files -- bin/*`
+                  .split("\n").map { |f| File.basename(f) }
   s.require_paths = ['lib']
 end

@@ -30,7 +30,9 @@ require 'acceleration/monkeypatches'
 # which provides a series a methods to accelerate development using the
 # Velocity API.
 #
-#    i = Velocity::Instance.new :endpoint => api_endpoint, :username => api_username, :password => api-password
+#    i = Velocity::Instance.new endpoint: api_endpoint,
+#                               username: api_username,
+#                               password: api-password
 #    if i.ping
 #      puts "Working"
 #      i.collections.each do |c|
@@ -43,10 +45,7 @@ require 'acceleration/monkeypatches'
 #
 # == Reference material:
 # * http://rdoc.info/github/archiloque/rest-client/master/file/README.rdoc
-# * http://code.vivisimo.com/gitweb/rails/velocity_gem.git/blob/master:/lib/velocity/api.rb
-# * https://bitbucket.org/colindean/challonge-api/src/daff627691c6/lib/challonge/api.rb
 # * http://nokogiri.org/Nokogiri.html
-# * http://zimonet.vivisimo.com/vivisimo/cgi-bin/query-meta?v%3asources=office&query=api%20documentation%20DOCUMENT_KEY%3a%22file%3a%2f%2f%3a80%2foffice%2fDocumentation%2f8.0-0%2fvelocity_api_developers_guide.pdf%2f%22&v%3aframe=cache&search-vfile=viv_mkzSm7&search-state=%28root%29%7croot&
 #
 module Velocity
   ##
@@ -125,7 +124,8 @@ module Velocity
     # Perform the actual REST action
     #
     def rest_call(params)
-      req = { method: :get, url: endpoint, headers: { params: params } } # restclient stupidly puts query params in the...headers?
+      # restclient stupidly puts query params in the...headers?
+      req = { method: :get, url: endpoint, headers: { params: params } }
       req[:timeout] = read_timeout if read_timeout
       req[:open_timeout] = open_timeout if open_timeout
       Logger.info "#hitting #{endpoint} with params: #{clean_password(params.clone)}"
@@ -186,7 +186,8 @@ module Velocity
     def collections
       n = call 'search-collection-list-xml'
       n.xpath('/vse-collections/vse-collection').collect do |c|
-        SearchCollection.new_from_xml(xml: c, instance: self) # initialize a new one, set its instance to me
+        # initialize a new one, set its instance to me
+        SearchCollection.new_from_xml(xml: c, instance: self)
       end
     end
 
@@ -334,8 +335,8 @@ module Velocity
       end
 
       ##
-      # This helper provides a programatic way to construct +:sort-xpaths+ XML for
-      # +query-search+
+      # This helper provides a programatic way to construct +:sort-xpaths+ XML
+      # for +query-search+.
       #
       # The expected usage of this is to put any Sorts in an array and then
       # Array#join them when setting the +:sort-xpaths+ parameter of
@@ -534,12 +535,18 @@ module Velocity
     # following methods are handled via method_missing and are thus documented
     # here.
     #
-    # * <tt>add(:node => xml)</tt> - Add a node to the repository.
-    # * <tt>delete(:element => element, :name => name, :md5 => md5)</tt> - Delete a node from the repository. +:md5+ is optional.
-    # * <tt>get(:element => element, :name => name)</tt> - Get a node from the repository.
-    # * <tt>get_md5(:element => element, :name => name)</tt> - Get a node with its md5 hash from the repository.
-    # * <tt>list_xml()</tt> - List the xml nodes in the repository.
-    # * <tt>update(:node => xml, :md5 => md5)</tt> - Update a node that is already in the repository. +:md5+ is optional.
+    # * <tt>add(:node => xml)</tt> -
+    #   Add a node to the repository.
+    # * <tt>delete(:element => element, :name => name, :md5 => md5)</tt> -
+    #   Delete a node from the repository. +:md5+ is optional.
+    # * <tt>get(:element => element, :name => name)</tt> -
+    #   Get a node from the repository.
+    # * <tt>get_md5(:element => element, :name => name)</tt> -
+    #   Get a node with its md5 hash from the repository.
+    # * <tt>list_xml()</tt> -
+    #   List the xml nodes in the repository.
+    # * <tt>update(:node => xml, :md5 => md5)</tt> -
+    #   Update a node that is already in the repository. +:md5+ is optional.
     #
     # Any return value will be raw +Nokogiri::XML::Document+ object.
     #
@@ -717,7 +724,8 @@ module Velocity
       # false.
       #
       def xml(args = {})
-        instance.call resolve('xml'), { :collection => name, :'stale-ok' => false }.merge(args)
+        instance.call resolve('xml'),
+                      { collection: name, :'stale-ok' => false }.merge(args)
       end
 
       ##
@@ -977,7 +985,8 @@ module Velocity
         # Refactored interface for all collection services
         #
         def act(action, options = {})
-          collection.instance.call resolve(action), options.merge(collection: collection.name)
+          collection.instance.call resolve(action),
+                                   options.merge(collection: collection.name)
         end
       end
 
@@ -1096,7 +1105,8 @@ module Velocity
       ##
       # Create the dictionary
       #
-      # Can optionally pass +:based_on+ String to use another dictionary as a template
+      # Can optionally pass +:based_on+ String to use another dictionary as a
+      # template
       #
       def create(_args = {})
         act __method__
@@ -1128,7 +1138,8 @@ module Velocity
       #
       def autocomplete_suggest(args = {})
         api_method = __method__.dasherize
-        AutocompleteSuggestionSet.new_from_xml(instance.call(api_method, args.merge(dictionary: name)))
+        AutocompleteSuggestionSet.new_from_xml
+          instance.call(api_method, args.merge(dictionary: name))
       end
 
       ##
@@ -1154,11 +1165,11 @@ module Velocity
 
         # Create a new set of suggestions given some XML from Velocity
         def self.new_from_xml(xml)
-          as = AutocompleteSuggestionSet.new(
-            xml.xpath('/suggestions/@query').first.value,
-            xml.xpath('/suggestions/suggestion').collect { |s| AutocompleteSuggestion.new_from_xml s },
-            xml
-          )
+          query = xml.xpath('/suggestions/@query').first.value
+          suggestions = xml.xpath('/suggestions/suggestion').collect do |s|
+            AutocompleteSuggestion.new_from_xml s
+          end
+          AutocompleteSuggestionSet.new(query, suggestions, xml)
         end
       end
 
@@ -1290,7 +1301,9 @@ module Velocity
     # Expects a String or a Hash with a key +:xml+ containing the AXL to be run.
     #
     def run(xml)
-      raise ArgumentError, 'Need some AXL to process.' if !([String, Hash].member? xml.class) || xml.empty?
+      if !([String, Hash].member? xml.class) || xml.empty?
+        raise ArgumentError, 'Need some AXL to process.'
+      end
 
       if (xml.class == Hash) && xml.key?(:xml)
         h = xml
@@ -1307,7 +1320,9 @@ module Velocity
     # Run an XML snippet with more options, such as +:profile+ => 'profile'.
     #
     def run_with(args = {})
-      raise ArgumentError, 'Need an :xml key containing some AXL to process.' if args.nil? || !args.key?(:xml) || args[:xml].empty?
+      if args.nil? || !args.key?(:xml) || args[:xml].empty?
+        raise ArgumentError, 'Need an :xml key containing some AXL to process.'
+      end
       call nil, { content_type: @content_type, backend: 'backend' }.merge(args)
     end
   end

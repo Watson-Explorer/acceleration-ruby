@@ -15,6 +15,7 @@ task :doc do
 end
 
 module Bundler
+  # Changes behavior of pushing gems to push to an internal gem server
   class GemHelper
     protected
 
