@@ -5,9 +5,9 @@ require 'acceleration/monkeypatches'
 ##
 # :main:Acceleration
 # == Acceleration
-# 
+#
 # by Colin Dean <cdean@vivisimo.com>
-# 
+#
 # (c) 2012 Vivisimo, Inc.
 #
 # For services and training around this library, please contact Vivisimo
@@ -19,7 +19,7 @@ require 'acceleration/monkeypatches'
 # a Vivisimo Velocity search platform instance in an interface familiar to
 # Rubyists. It communicates with the instance via REST and parses the responses
 # using Nokogiri, a very fast and well-tested XML library.
-# 
+#
 # Acceleration is derived from Velocity ;-)
 #
 # == Interface
@@ -76,7 +76,6 @@ module Velocity
     # The error a ping encounters.
     attr_reader :error
 
-
     ##
     # call-seq:
     #   new(:endpoint => endpoint, :username => username, :password => password)
@@ -104,29 +103,29 @@ module Velocity
     # that do that generally wrap around the object to provide convenience
     # methods.
     #
-    def call(function, args={})
+    def call(function, args = {})
       sanity_check
       Logger.info "calling #{function} with args: #{args}"
-      if args.class == Array and args.empty?
+      if (args.class == Array) && args.empty?
         args = {}
-      elsif !args.empty? and args.first.class == Hash
+      elsif !args.empty? && (args.first.class == Hash)
         args = args.first
       end
-      params = base_parameters.merge( {'v.function' => function}.merge(args))
-      result = Nokogiri::XML(rest_call params)
-      unless VelocityException.exception? result
+      params = base_parameters.merge({ 'v.function' => function }.merge(args))
+      result = Nokogiri::XML(rest_call(params))
+      if VelocityException.exception? result
+        raise VelocityException, result
+      else
         @error = nil
         return result
-      else
-        raise VelocityException, result
       end
     end
 
     ##
     # Perform the actual REST action
     #
-    def rest_call params
-      req = {:method => :get, :url => endpoint, :headers => {:params => params } } #restclient stupidly puts query params in the...headers?
+    def rest_call(params)
+      req = { method: :get, url: endpoint, headers: { params: params } } # restclient stupidly puts query params in the...headers?
       req[:timeout] = read_timeout if read_timeout
       req[:open_timeout] = open_timeout if open_timeout
       Logger.info "#hitting #{endpoint} with params: #{clean_password(params.clone)}"
@@ -134,8 +133,8 @@ module Velocity
         request = RestClient::Request.execute(req)
       rescue RestClient::RequestURITooLong => e
         Logger.info "Server says #{e}, retrying with POST..."
-        #try a post. I don't like falling back like this, but pretty much
-        #everything but repository actions will be under the standard limit
+        # try a post. I don't like falling back like this, but pretty much
+        # everything but repository actions will be under the standard limit
         req.delete(:headers)
         req[:payload] = params
         req[:method] = :post
@@ -143,10 +142,10 @@ module Velocity
       end
     end
 
-    def clean_password params_hash
-      params_hash.each_pair do |key,value|
-        if key.to_s.include? "password"
-          params_hash[key] = "md5:" + Digest::MD5.hexdigest(value)
+    def clean_password(params_hash)
+      params_hash.each_pair do |key, value|
+        if key.to_s.include? 'password'
+          params_hash[key] = 'md5:' + Digest::MD5.hexdigest(value)
         else
           params_hash[key] = value
         end
@@ -156,12 +155,12 @@ module Velocity
     private :clean_password
 
     ##
-    # Assemble a hash with the basic parameters for the instance. 
+    # Assemble a hash with the basic parameters for the instance.
     #
     def base_parameters
-      {'v.app' => v_app, 
-       'v.username' => username,
-       'v.password' => password }
+      { 'v.app' => v_app,
+        'v.username' => username,
+        'v.password' => password }
     end
 
     ##
@@ -169,44 +168,44 @@ module Velocity
     # appropriately named "ping".
     #
     # If Instance#ping returns false, check Instance#error for the exception
-    # that was thrown. Instance#ping should always have a boolean return. 
+    # that was thrown. Instance#ping should always have a boolean return.
     #
     def ping
       begin
-        n = call "ping"
+        n = call 'ping'
         return true if n.root.name == 'pong'
       rescue Exception => e
         @error = e
       end
-      return false
+      false
     end
 
     ##
     # List all collections available on the instance.
     #
     def collections
-      n = call "search-collection-list-xml"
+      n = call 'search-collection-list-xml'
       n.xpath('/vse-collections/vse-collection').collect do |c|
-        SearchCollection.new_from_xml(:xml => c, :instance => self) #initialize a new one, set its instance to me
+        SearchCollection.new_from_xml(xml: c, instance: self) # initialize a new one, set its instance to me
       end
     end
 
     ##
     # Get just one collection
     #
-    def collection name
+    def collection(name)
       c = SearchCollection.new(name)
       c.instance = self
-      return c
+      c
     end
 
     ##
     # List all dictionaries available on the instance.
     #
     def dictionaries
-      n = call "dictionary-list-xml"
+      n = call 'dictionary-list-xml'
       n.xpath('/dictionaries/dictionary').collect do |d|
-        Dictionary.new_from_xml(:xml => d, :instance => self)
+        Dictionary.new_from_xml(xml: d, instance: self)
       end
     end
 
@@ -215,10 +214,10 @@ module Velocity
     # are set.
     #
     def sanity_check
-      raise ArgumentError, "You must specify a v.app." if v_app.nil?
-      raise ArgumentError, "You must specify a username." if username.nil?
-      raise ArgumentError, "You must specify a password." if password.nil?
-      raise ArgumentError, "You must specify an endpoint." if endpoint.nil?
+      raise ArgumentError, 'You must specify a v.app.' if v_app.nil?
+      raise ArgumentError, 'You must specify a username.' if username.nil?
+      raise ArgumentError, 'You must specify a password.' if password.nil?
+      raise ArgumentError, 'You must specify an endpoint.' if endpoint.nil?
     end
 
     ##
@@ -228,7 +227,7 @@ module Velocity
     #
     # TODO: implement response wrapper
     #
-    def axl_service_status args={}
+    def axl_service_status(args = {})
       call __method__.dasherize, args
     end
 
@@ -240,7 +239,7 @@ module Velocity
     #
     # TODO: implement response wrapper
     #
-    def write_environment_list args={}
+    def write_environment_list(args = {})
       call __method__.dasherize, args
     end
 
@@ -281,7 +280,7 @@ module Velocity
       ##
       # This magical method enables a direct pass-through of methods if no
       # special logic is required to handle the response.
-      def method_missing(function, *args, &block)
+      def method_missing(function, *args)
         instance.call resolve(function), args
       end
     end
@@ -299,27 +298,27 @@ module Velocity
       # The prefix for the query model
       #
       def prefix
-        "query"
+        'query'
       end
-      
+
       ##
       # Execute a standard search using a source the instance.
       #
       # You'll want to supply at least a +:sources+ option and likely
       # a +:query+ option.
-      def search args
+      def search(args)
         QueryResponse.new(@instance.call(resolve('search'), args))
       end
 
       ##
-      # Execute a browse query, having already executed a regular Query#search 
-      # and passing the +:browse+ option set to true. 
+      # Execute a browse query, having already executed a regular Query#search
+      # and passing the +:browse+ option set to true.
       #
       # You must supply a +:file+ corresponding to the file that was returned
       # from the original query. This is not checked here, so _caveat_
       # _implementor_.
       #
-      def browse args
+      def browse(args)
         QueryResponse.new(@instance.call(resolve('browse'), args))
       end
 
@@ -330,7 +329,7 @@ module Velocity
       # an XML nodeset containing document nodes. This is not checked here, so
       # _caveat_ _implementor_.
       #
-      def similar_documents args
+      def similar_documents(args)
         QueryResponse.new(@instance.call(resolve('similar-documents'), args))
       end
 
@@ -342,34 +341,34 @@ module Velocity
       # Array#join them when setting the +:sort-xpaths+ parameter of
       # Query#search.
       class Sort
-        #The xpath to the content to be sorted
+        # The xpath to the content to be sorted
         attr_accessor :xpath
-        
+
         # The order in which it should be sorted
         attr_accessor :order
-        
-        #valid orders
-        VALID_ORDERS = [:ascending, :descending, nil]
-        
+
+        # valid orders
+        VALID_ORDERS = [:ascending, :descending, nil].freeze
+
         # call-seq:
         #   new(:order => order, :xpath => xpath)
         #
         # Create a new Sort helper
-        def initialize args
+        def initialize(args)
           @xpath = args[:xpath]
           @order = args[:order] || VALID_ORDERS.first
         end
-        
+
         # Create an XML string from the Sort object
         def to_s
           sane?
           builder = Nokogiri::XML::Builder.new do |xml|
-            xml.sort(:xpath => xpath, :order => order )
+            xml.sort(xpath: xpath, order: order)
           end
-          #this is necessary to suppress the xml version declaration
+          # this is necessary to suppress the xml version declaration
           Nokogiri::XML(builder.to_xml).root.to_xml
         end
-        
+
         private
 
         # Set the order, ensuring that it's valid
@@ -387,11 +386,11 @@ module Velocity
     class QueryResponse
       # A handle on the XML document behind the response
       attr_accessor :doc
-      
+
       ##
       # Create a new QueryResponse given the response XML from Velocity
       #
-      def initialize doc
+      def initialize(doc)
         @doc = doc
       end
 
@@ -399,14 +398,14 @@ module Velocity
       # Indicates if a query response actually contains documents
       #
       def results?
-        documents.size > 0
+        !documents.empty?
       end
 
       ##
       # Retrieve all documents from the query response
       #
       def documents
-        doc.xpath("/query-results/list/document").collect do |d|
+        doc.xpath('/query-results/list/document').collect do |d|
           Document.new d
         end
       end
@@ -420,7 +419,7 @@ module Velocity
         doc.xpath('/query-results/@file').first.value
       end
     end
-    
+
     ##
     # Document wraps the XML for an individual Velocity document in order to
     # provide several convenience methods.
@@ -432,7 +431,7 @@ module Velocity
       ##
       # Create a new document XML element wrapper
       #
-      def initialize node
+      def initialize(node)
         @doc = node
       end
 
@@ -440,7 +439,7 @@ module Velocity
       # Retrieve all contents
       #
       def contents
-        doc.xpath "content"
+        doc.xpath 'content'
       end
 
       ##
@@ -453,7 +452,7 @@ module Velocity
       #    document.content 'author'
       #    document.content("title").first
       #
-      def content name
+      def content(name)
         doc.xpath "content[@name='#{name}']"
       end
 
@@ -462,7 +461,7 @@ module Velocity
       #
       #     document.attribute "url"
       #
-      def attribute name
+      def attribute(name)
         doc.attribute name
       end
 
@@ -477,30 +476,31 @@ module Velocity
       # Direct passthrough of the xpath in order to execute more complex XPath
       # queries on the source document XML.
       #
-      def xpath xpath
+      def xpath(xpath)
         doc.xpath xpath
       end
     end
 
-    ## 
+    ##
     # Create a new query
     #
     def query
       Query.new(self)
     end
 
-    ## 
+    ##
     # CollectionBroker models an instance's collection broker, which can start
     # and stop collections on demand. It's especially useful for when an
     # instance has tens or hundreds of collections which cannot be
     # simultaneously held in memory.
-    # 
+    #
     # TODO: implement
     class CollectionBroker < APIModel
       # The CollectionBroker prefix is +collection-broker+.
       def prefix
         'collection-broker'
       end
+
       ##
       # Create a new wrapper for the collection broker functions.
       #
@@ -519,6 +519,7 @@ module Velocity
       def prefix
         'reports'
       end
+
       # Create a new wrapper for reports management functions.
       def initialize
         raise NotImplementedError
@@ -547,32 +548,34 @@ module Velocity
       def prefix
         'repository'
       end
+
       # List all nodes as nodespecs
-      def list_xml_specs internal=false
+      def list_xml_specs(internal = false)
         arr = []
         xml = list_xml
         xml.child.children.each do |c|
-          if !c.has_attribute?("internal") || (c.has_attribute?("internal") and internal)
-            arr << "%s.%s" % [c.name(), c.attr("name")]
+          if !c.has_attribute?('internal') || (c.has_attribute?('internal') && internal)
+            arr << '%s.%s' % [c.name, c.attr('name')]
           end
         end
-        return arr
+        arr
       end
+
       # Get a node given its nodespec in the form +element.@name+
-      def get_nodespec nodespec
-        element, name = nodespec.split "."
-        get :element => element, :name => name
+      def get_nodespec(nodespec)
+        element, name = nodespec.split '.'
+        get element: element, name: name
       end
     end
 
-    #Get a handle on the repository
+    # Get a handle on the repository
     def repository
       Repository.new(self)
     end
 
     ##
     # Scheduler models an instance's scheduler service. It can start and stop
-    # the service, as well as retrieve its status and list jobs. 
+    # the service, as well as retrieve its status and list jobs.
     #
     # The scheduler configuration can be only modified by updating the
     # scheduler node in the repository.
@@ -584,6 +587,7 @@ module Velocity
       def prefix
         'scheduler'
       end
+
       # Create a new wrapper for the scheduler functions.
       def initialize
         raise NotImplementedError
@@ -597,10 +601,11 @@ module Velocity
     # TODO: implement
     #
     class SearchService < APIModel
-      #The SearchService prefix is +search-service+.
+      # The SearchService prefix is +search-service+.
       def prefix
         'search-service'
       end
+
       # Create a new wrapper for the search-service functions.
       def initialize
         raise NotImplementedError
@@ -619,6 +624,7 @@ module Velocity
       def prefix
         'source-test'
       end
+
       # Create a new wrapper for the source-test functions.
       def initialize
         raise NotImplementedError
@@ -635,13 +641,14 @@ module Velocity
       attr_accessor :name
       # The SearchCollection prefix is +search-collection+.
       def prefix
-        "search-collection"
+        'search-collection'
       end
+
       # Create a new SearchCollection wrapper.
       def initialize(collection_name)
         @name = collection_name
       end
-      
+
       ##
       # call-seq:
       #   SearchCollection.new_from_xml(:xml => xml, :instance => instance)
@@ -651,7 +658,7 @@ module Velocity
       def self.new_from_xml(args)
         sc = SearchCollection.new(args[:xml].attributes['name'].to_s)
         sc.instance = args[:instance]
-        return sc
+        sc
       end
 
       ##
@@ -677,8 +684,8 @@ module Velocity
       # Optionally pass +:'stale-ok'+ boolean to receive stats that may be
       # behind.
       #
-      def status args={}
-        Status.new instance.call resolve("status"), {:collection => name}
+      def status(_args = {})
+        Status.new instance.call resolve('status'), collection: name
       end
 
       ##
@@ -696,8 +703,8 @@ module Velocity
       # it correctly separates parts of the collection configuration that must
       # go into the repository from parts that are saved in a status file.
       #
-      def set_xml args={}
-        instance.call resolve("set-xml"), args.merge(:collection => name)
+      def set_xml(args = {})
+        instance.call resolve('set-xml'), args.merge(collection: name)
       end
 
       ##
@@ -709,8 +716,8 @@ module Velocity
       # copy is OK. Requesting a fresh copy may extend the request. Default is
       # false.
       #
-      def xml args={}
-        instance.call resolve("xml"), {:collection => name, :'stale-ok' => false}.merge(args)
+      def xml(args = {})
+        instance.call resolve('xml'), { :collection => name, :'stale-ok' => false }.merge(args)
       end
 
       ##
@@ -722,6 +729,7 @@ module Velocity
         def prefix
           'annotation'
         end
+
         # Create a new wrapper for the annotation functions.
         def initialize
           raise NotImplementedError
@@ -738,7 +746,7 @@ module Velocity
         ##
         # Create a new wrapper for the status XML
         #
-        def initialize doc
+        def initialize(doc)
           @doc = doc
         end
 
@@ -746,14 +754,14 @@ module Velocity
         # Get the crawler status node
         #
         def crawler
-          CrawlerStatus.new doc.xpath("/vse-status/crawler-status").first
+          CrawlerStatus.new doc.xpath('/vse-status/crawler-status').first
         end
 
         ##
         # Get the indexer status node
         #
         def indexer
-          IndexerStatus.new doc.xpath("/vse-status/vse-index-status").first
+          IndexerStatus.new doc.xpath('/vse-status/vse-index-status').first
         end
 
         ##
@@ -762,21 +770,22 @@ module Velocity
         # If false, then the collection isn't running and has no data.
         # if true, then the collection _may_ be running but certainly has data.
         def has_data?
-          doc.xpath("__CONTAINER__").empty?
+          doc.xpath('__CONTAINER__').empty?
         end
 
         ##
-        # An abstracted wrapper for the various parts of the collection status 
+        # An abstracted wrapper for the various parts of the collection status
         # XML returned by Velocity.
         #
         class ServiceStatus
           # The raw document describing the status
           attr_accessor :doc
           # Create a new service status wrapper
-          def initialize doc
+          def initialize(doc)
             @doc = doc
             @attrs = {}
           end
+
           ##
           # Ensure that the status is actually there
           #
@@ -791,29 +800,29 @@ module Velocity
           # that you don't have to.
           #
           def attributes
-            return @attrs if !@attrs.empty?
-            doc.attributes.each do |key,nattr|
+            return @attrs unless @attrs.empty?
+            doc.attributes.each do |key, nattr|
               @attrs[key.to_sym.dedasherize] = nattr.value
             end
-            return @attrs
+            @attrs
           end
 
           ##
           # Get a single attribute
           #
-          def attribute attr
+          def attribute(attr)
             doc.attribute(attr).value
           end
 
           ##
           # Capture attributes accessed as instance variables
           #
-          def method_missing (function, *args, &block)
+          def method_missing(function, *args, &block)
             f = function.to_s.dasherize
             if doc.attributes.member? f
               attribute f
-            elsif doc.attributes.member? "n-" + f
-              attribute "n-" + f
+            elsif doc.attributes.member? 'n-' + f
+              attribute 'n-' + f
             else
               super(function, args, block)
             end
@@ -830,7 +839,7 @@ module Velocity
           def converter_timings_total_ms
             doc.xpath('converter-timings/@total-ms').first.value.to_i
           end
-          
+
           ##
           # Get an array of hashes containing the timings for all converters
           # that have run so far while crawling.
@@ -838,7 +847,7 @@ module Velocity
           def converter_timings
             doc.xpath('converter-timings/converter-timing').collect do |ct|
               attrs = {}
-              ct.attributes.each do |key,nattr|
+              ct.attributes.each do |key, nattr|
                 attrs[key] = nattr.value
               end
               attrs
@@ -862,7 +871,7 @@ module Velocity
           ##
           # Private method unifying how crawl-hop elements are presented
           #
-          def crawl_hops which
+          def crawl_hops(which)
             doc.xpath('crawl-hops-' + which.to_s + '/crawl-hop').collect do |ch|
               attrs = {}
               ch.attributes.each do |key, nattr|
@@ -873,15 +882,14 @@ module Velocity
           end
           private :crawl_hops
 
-          #TODO: crawl-remote-all-status/crawl-remote-{server,client,all}-status
-
+          # TODO: crawl-remote-all-status/crawl-remote-{server,client,all}-status
         end
 
         ##
         # Wrapper for the index status object
         #
         class IndexerStatus < ServiceStatus
-          #TODO: implement convenience methods
+          # TODO: implement convenience methods
           #
           ##
           # Get index serving status
@@ -895,6 +903,7 @@ module Velocity
               attrs
             end
           end
+
           ##
           # Get information about the index files
           #
@@ -919,7 +928,7 @@ module Velocity
         # Create a new wrapper for collection services for the given
         # collection.
         #
-        def initialize collection
+        def initialize(collection)
           @collection = collection
         end
 
@@ -935,7 +944,7 @@ module Velocity
         # * :type => 'resume' 'resume-and-idle' 'refresh-inplace' 'refresh-new'
         #             'new' 'apply-changes'
         #
-        def start options={}
+        def start(options = {})
           act 'start', options
         end
 
@@ -947,7 +956,7 @@ module Velocity
         # * :subcollection => 'live' (default) or 'staging'
         # * :kill => true or false
         #
-        def stop options={}
+        def stop(options = {})
           act 'stop', options
         end
 
@@ -958,17 +967,18 @@ module Velocity
         #
         # * :subcollection => 'live' (default) or 'staging'
         #
-        def restart options={}
+        def restart(options = {})
           act 'restart', options
         end
 
         private
-          ## 
-          # Refactored interface for all collection services
-          # 
-          def act action, options={}
-            collection.instance.call resolve(action), options.merge({:collection => collection.name})
-          end
+
+        ##
+        # Refactored interface for all collection services
+        #
+        def act(action, options = {})
+          collection.instance.call resolve(action), options.merge(collection: collection.name)
+        end
       end
 
       ##
@@ -976,13 +986,13 @@ module Velocity
       #
       # Methods implied by method_missing:
       # - start
-      # - stop 
+      # - stop
       # - restart
       #
       class Crawler < CollectionService
         # The prefix for interacting with the Velocity API.
         def prefix
-          collection.prefix + "-crawler"
+          collection.prefix + '-crawler'
         end
 
         ##
@@ -991,18 +1001,17 @@ module Velocity
         # This is a convenience method for Status#crawler. See
         # SearchCollection#status for optional arguments.
         #
-        def status args={}
+        def status(args = {})
           collection.status(args).crawler
         end
-
       end
 
       ##
       # The Indexer service of the collection
-      # 
+      #
       # Methods implied by method_missing:
       # - start
-      # - stop 
+      # - stop
       # - restart
       #
       class Indexer < CollectionService
@@ -1010,7 +1019,7 @@ module Velocity
         ##
         # The prefix for interacting via the Velocity API.
         def prefix
-          collection.prefix + "-indexer"
+          collection.prefix + '-indexer'
         end
 
         ##
@@ -1018,22 +1027,23 @@ module Velocity
         # across which the index is spread and also removes deleted data.
         #
         # * :subcollection => 'live' (default) or 'staging'
-        def full_merge options={}
+        def full_merge(options = {})
           act 'full-merge', options
         end
+
         ##
         # Get the status of the indexer
         #
         # This is a convenience method for Status#indexer. See
         # SearchCollection#status for optional arguments.
         #
-        def status args={}
+        def status(args = {})
           collection.status(args).indexer
         end
       end
-    end #Velocity::Instance::SearchCollection
+    end # Velocity::Instance::SearchCollection
 
-    ## 
+    ##
     # Interact with a dictionary on the Velocity instance
     #
     # Note that +dictionary-list-xml+ is implemented as
@@ -1042,7 +1052,7 @@ module Velocity
     class Dictionary < APIModel
       # The name of the dictionary.
       attr_accessor :name
-      #The Dictionary prefix is simply +dictionary+.
+      # The Dictionary prefix is simply +dictionary+.
       def prefix
         'dictionary'
       end
@@ -1057,12 +1067,13 @@ module Velocity
       def self.new_from_xml(args)
         d = Dictionary.new(args[:xml].attributes['name'].to_s)
         d.instance = args[:instance]
-        return d
+        d
       end
+
       ##
       # Create a new wrapper for a dictionary
       #
-      def initialize name
+      def initialize(name)
         @name = name
       end
 
@@ -1081,22 +1092,25 @@ module Velocity
       def build
         act __method__
       end
+
       ##
       # Create the dictionary
       #
       # Can optionally pass +:based_on+ String to use another dictionary as a template
       #
-      def create args={}
+      def create(_args = {})
         act __method__
       end
+
       ##
       # Stop the dictionary build process
       #
       # Can optionally pass +:kill+ boolean if it should be killed immediately
       #
-      def stop args={}
+      def stop(_args = {})
         act __method__, {}
       end
+
       ##
       # Delete the dictionary
       #
@@ -1112,9 +1126,9 @@ module Velocity
       #
       # You must provide a +:str+ option in order to receive results.
       #
-      def autocomplete_suggest args={}
+      def autocomplete_suggest(args = {})
         api_method = __method__.dasherize
-        AutocompleteSuggestionSet.new_from_xml(instance.call api_method, args.merge({:dictionary=>name}))
+        AutocompleteSuggestionSet.new_from_xml(instance.call(api_method, args.merge(dictionary: name)))
       end
 
       ##
@@ -1131,17 +1145,18 @@ module Velocity
         attr_reader :query
         # The suggestions array
         attr_reader :suggestions
-        #Create a new set of suggestions
-        def initialize query, suggestions={}, xml=nil
+        # Create a new set of suggestions
+        def initialize(query, suggestions = {}, xml = nil)
           @query = query
           @suggestions = suggestions
           @doc = xml
         end
-        #Create a new set of suggestions given some XML from Velocity
-        def self.new_from_xml xml
+
+        # Create a new set of suggestions given some XML from Velocity
+        def self.new_from_xml(xml)
           as = AutocompleteSuggestionSet.new(
-            xml.xpath("/suggestions/@query").first.value, 
-            xml.xpath("/suggestions/suggestion").collect { |s| AutocompleteSuggestion.new_from_xml s },
+            xml.xpath('/suggestions/@query').first.value,
+            xml.xpath('/suggestions/suggestion').collect { |s| AutocompleteSuggestion.new_from_xml s },
             xml
           )
         end
@@ -1158,33 +1173,32 @@ module Velocity
         # The number of occurrences
         attr_reader :count
         # Create a new suggestion
-        def initialize phrase, count=0, xml=nil
+        def initialize(phrase, count = 0, xml = nil)
           @phrase = phrase
           @count = count
           @doc = xml
         end
-        #Create a new suggestion given some XML from Velocity
-        def self.new_from_xml xml
+
+        # Create a new suggestion given some XML from Velocity
+        def self.new_from_xml(xml)
           AutocompleteSuggestion.new(
             xml.children.first.text,
-            xml.attributes["count"].value.to_i,
+            xml.attributes['count'].value.to_i,
             xml
           )
         end
-        #This is really only ever going to be used as a string
+
+        # This is really only ever going to be used as a string
         def to_s
           phrase
         end
-
       end
 
-
-      
-      def act action, args={}
-        return instance.call resolve(action), args.merge({:dictionary => name})
+      def act(action, args = {})
+        instance.call resolve(action), args.merge(dictionary: name)
       end
       private :act
-    end #Velocity::Instance::Dictionary
+    end # Velocity::Instance::Dictionary
 
     ##
     # Interacts with alerts registered on the instance
@@ -1192,10 +1206,11 @@ module Velocity
     # TODO: implement
     #
     class Alert < APIModel
-      #The prefix for Alert is simply +alert+.
+      # The prefix for Alert is simply +alert+.
       def prefix
         'alert'
       end
+
       ##
       # Create a new wrapper for the Alerts interface.
       #
@@ -1203,43 +1218,45 @@ module Velocity
         raise NotImplementedError
       end
     end
-
-  end #Velocity::Instance
+  end # Velocity::Instance
 
   ##
   # Generic Velocity API exception thrown when Velocity doesn't like the
   # arguments supplied in a call or the credentials are incorrect.
-  # 
+  #
   # Don't ever raise this yourself; it should be raised only by
   # Velocity::Instance#call
   #
-  class VelocityException < Exception
+  class VelocityException < RuntimeError
     ##
     # Determines if a response from the API is an exception response
     #
-    def self.exception? node
+    def self.exception?(node)
       node.root.name == 'exception'
     end
+
     ##
     # Wrap this exception around the XML returned by Velocity
     #
-    def initialize node
+    def initialize(node)
       @node = node
       super(api_message)
     end
+
     ##
     # Get the string describing the thrown exception
     #
     def api_message
       @node.xpath('/exception//text()').to_a.join.strip
     end
+
     ##
     # Convert this exception to a string
     #
     def to_s
       api_message
     end
-  end #Velocity::VelocityException
+  end # Velocity::VelocityException
 
   ##
   # Chico is an AXL runner. It allows a user to try small snippets of AXL, the
@@ -1249,7 +1266,7 @@ module Velocity
   # future.
   #
   class Chico < Instance
-    #The content type to be sent. Default is text/xml.
+    # The content type to be sent. Default is text/xml.
     attr_reader :content_type
     ##
     # call-seq:
@@ -1258,10 +1275,11 @@ module Velocity
     # Create a new Chico instance. This wraps around Instance constructor and
     # sets +:v_app+ to 'chico'.
     #
-    def initialize args={}
-      super(args.merge({:v_app => 'chico'}))
+    def initialize(args = {})
+      super(args.merge(v_app: 'chico'))
       @content_type = 'text/xml'
     end
+
     ##
     # call-seq:
     #   run(xml)
@@ -1271,26 +1289,26 @@ module Velocity
     #
     # Expects a String or a Hash with a key +:xml+ containing the AXL to be run.
     #
-    def run xml
-      raise ArgumentError, "Need some AXL to process." if !([String, Hash].member? xml.class) or xml.empty?
+    def run(xml)
+      raise ArgumentError, 'Need some AXL to process.' if !([String, Hash].member? xml.class) || xml.empty?
 
-      if xml.class == Hash and xml.has_key? :xml
+      if (xml.class == Hash) && xml.key?(:xml)
         h = xml
       elsif xml.class == String
-        h = { :xml => xml }
+        h = { xml: xml }
       end
       run_with h
     end
+
     ##
     # call-seq:
     #   run_with(:xml => xml, ...)
     #
     # Run an XML snippet with more options, such as +:profile+ => 'profile'.
     #
-    def run_with args={}
-      raise ArgumentError, "Need an :xml key containing some AXL to process." if args.nil? or !args.has_key? :xml or args[:xml].empty?
-      call nil, {:content_type => @content_type, :backend=>'backend'}.merge(args)
+    def run_with(args = {})
+      raise ArgumentError, 'Need an :xml key containing some AXL to process.' if args.nil? || !args.key?(:xml) || args[:xml].empty?
+      call nil, { content_type: @content_type, backend: 'backend' }.merge(args)
     end
-
   end
 end

@@ -9,13 +9,14 @@ class String
   # method names by replacing underscores with dashes.
   #
   def dasherize
-    downcase.gsub(/_/,'-')
+    downcase.tr('_', '-')
   end
+
   ##
   # Convenience function for converting Velocity API method names to Ruby
   # method or symbol names.
   def dedasherize
-    gsub(/-/, '_')
+    tr('-', '_')
   end
 end
 
@@ -30,13 +31,13 @@ class Symbol
   # method names by replacing underscores with dashes.
   #
   def dasherize
-    to_s.downcase.gsub(/_/,'-').to_sym
+    to_s.downcase.tr('_', '-').to_sym
   end
+
   ##
   # Convenience function for converting Velocity API method names to Ruby
   # method or symbol names.
   def dedasherize
-    to_s.gsub(/-/, '_').to_sym
+    to_s.tr('-', '_').to_sym
   end
 end
-

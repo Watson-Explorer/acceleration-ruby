@@ -8,13 +8,13 @@ guard :bundler do
 end
 
 group :red_green_refactor, halt_on_fail: true do
-  #guard :rspec,
-    #      cmd: 'bundle exec rspec',
-    #     failed_mode: :keep do
-    # watch 'spec/spec_helper.rb'
-    # watch(/^spec\/.+_spec\.rb/)
-    # watch(/^lib\/(.+)\.rb/)
-  #end
+  # guard :rspec,
+  #      cmd: 'bundle exec rspec',
+  #     failed_mode: :keep do
+  # watch 'spec/spec_helper.rb'
+  # watch(/^spec\/.+_spec\.rb/)
+  # watch(/^lib\/(.+)\.rb/)
+  # end
 
   guard :rubocop do
     watch(/.+\.rb$/)
