@@ -23,7 +23,7 @@ See LICENSE.md for license terms.
 Installation
 ------------
 
-_to be completed_
+    gem install acceleration
 
 Contributing
 ------------
