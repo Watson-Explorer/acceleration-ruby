@@ -12,6 +12,14 @@ Acceleration provides a succinct, ActiveResource-style interface to a IBM Watson
 
 The name comes from WEX-FC's pre-acquisition name, Vivísimo Velocity. Acceleration is derived from Velocity. Get it?
 
+License
+-------
+
+This library is property of IBM Corporation and licensed under the MIT license.
+See LICENSE.md for license terms.
+
+(C) Copyright IBM Corporation. 2012-2016. AWSOM WAT056420161228.
+
 Installation
 ------------
 
@@ -27,7 +35,7 @@ infrastructure is more than welcome!
 
 Check out the source:
 
-    git clone git@github.ibm.com:Watson-Explorer/acceleration.git
+    git clone git@github.com:Watson-Explorer/acceleration-ruby.git
     cd acceleration
 
 Install dependencies:

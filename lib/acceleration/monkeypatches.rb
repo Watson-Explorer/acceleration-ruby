@@ -1,3 +1,6 @@
+# Licensed materials property of IBM Corporation.
+# (C) Copyright IBM Corporation. 2012-2016.
+
 ##
 # Monkeypatches on String to provide convenience methods
 #

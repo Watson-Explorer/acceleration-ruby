@@ -8,7 +8,8 @@ require 'acceleration/monkeypatches'
 #
 # by Colin Dean <colindean@us.ibm.com>
 #
-# (C) Copyright IBM Corp. 2012-2016. All Rights Reserved.
+# Licensed materials property of IBM Corporation.
+# (C) Copyright IBM Corporation. 2012-2016.
 #
 # For services and training around this library, please contact an IBM Watson
 # Solution Architect.
