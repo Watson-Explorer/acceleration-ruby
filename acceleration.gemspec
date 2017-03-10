@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.platform = Gem::Platform::RUBY
   s.authors = ['Colin Dean']
   s.email = ['colindean@us.ibm.com']
-  s.homepage = 'https://github.com/watson-explorer'
+  s.homepage = 'https://github.com/watson-explorer/acceleration-ruby'
   product_name = 'IBM Watson Explorer Foundational Components Engine'
   s.summary = "A succinct interface to to the #{product_name} REST API"
   s.description = <<-END.gsub(/^ {6}/, '')
@@ -22,7 +22,6 @@ Gem::Specification.new do |s|
     s.add_development_dependency version_unspecified
   end
 
-  s.add_development_dependency 'geminabox', '~> 0.10'
   s.add_development_dependency 'guard', '~> 2.14.0'
   s.add_development_dependency 'guard-bundler', '~> 2.1.0'
   s.add_development_dependency 'guard-rubocop', '~> 1.2.0'

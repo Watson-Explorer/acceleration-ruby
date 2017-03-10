@@ -14,14 +14,3 @@ task :doc do
   sh 'rdoc --main Velocity lib'
 end
 
-module Bundler
-  # Changes behavior of pushing gems to push to an internal gem server
-  class GemHelper
-    protected
-
-      def rubygem_push(path)
-        puts "** running gem inabox '#{path}'"
-        sh "gem inabox '#{path}'"
-      end
-  end
-end
