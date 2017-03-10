@@ -8,5 +8,5 @@
 # see the Velocity module documentation.
 module Acceleration
   # The version of the Acceleration gem.
-  VERSION = '0.0.15'.freeze
+  VERSION = '0.0.16'.freeze
 end
